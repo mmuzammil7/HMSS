@@ -1,0 +1,10 @@
+packages:
+  "date-fns": "For date formatting and manipulation"
+  "framer-motion": "For page transitions and micro-interactions"
+  "recharts": "For dashboard charts and statistics"
+  "clsx": "For conditional class name joining"
+  "tailwind-merge": "For merging tailwind classes safely"
+images: []
+notes:
+  - "Using generated hooks from @workspace/api-client-react"
+  - "Query invalidation relies on predictable URL query keys (e.g., ['/api/residents'])"
