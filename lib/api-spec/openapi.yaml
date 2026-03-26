@@ -8,17 +8,12 @@ servers:
     description: Base API path
 tags:
   - name: health
-    description: Health operations
   - name: residents
-    description: Resident management
   - name: attendance
-    description: Attendance tracking
   - name: settings
-    description: Mess settings
   - name: billing
-    description: Billing and reports
   - name: whatsapp
-    description: WhatsApp messaging
+  - name: auth
 
 paths:
   /healthz:
@@ -33,6 +28,57 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/verify-pin:
+    post:
+      operationId: verifyPin
+      tags: [auth]
+      summary: Verify admin PIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyPinRequest"
+      responses:
+        "200":
+          description: PIN result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyPinResponse"
+
+  /auth/set-pin:
+    post:
+      operationId: setPin
+      tags: [auth]
+      summary: Set or change admin PIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetPinRequest"
+      responses:
+        "200":
+          description: PIN set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessMessage"
+
+  /auth/has-pin:
+    get:
+      operationId: hasPin
+      tags: [auth]
+      summary: Check if admin PIN is set
+      responses:
+        "200":
+          description: Whether PIN is configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HasPinResponse"
 
   /residents:
     get:
@@ -288,6 +334,40 @@ components:
       required:
         - message
 
+    VerifyPinRequest:
+      type: object
+      properties:
+        pin:
+          type: string
+      required:
+        - pin
+
+    VerifyPinResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+      required:
+        - valid
+
+    SetPinRequest:
+      type: object
+      properties:
+        currentPin:
+          type: string
+        newPin:
+          type: string
+      required:
+        - newPin
+
+    HasPinResponse:
+      type: object
+      properties:
+        hasPin:
+          type: boolean
+      required:
+        - hasPin
+
     Resident:
       type: object
       properties:
@@ -401,6 +481,12 @@ components:
           type: number
         currency:
           type: string
+        whatsappApiKey:
+          type: string
+        whatsappSender:
+          type: string
+        hasWhatsapp:
+          type: boolean
         updatedAt:
           type: string
       required:
@@ -409,6 +495,7 @@ components:
         - dietRatePerDay
         - breakfastRate
         - currency
+        - hasWhatsapp
         - updatedAt
 
     UpdateSettingsRequest:
@@ -421,6 +508,10 @@ components:
         breakfastRate:
           type: number
         currency:
+          type: string
+        whatsappApiKey:
+          type: string
+        whatsappSender:
           type: string
       required:
         - messName

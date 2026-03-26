@@ -5,22 +5,21 @@ import { SendMonthlyBillsBody, SendReminderBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
-const WHATSAPP_API_KEY = process.env.WHATSAPP_API_KEY;
-const WHATSAPP_SENDER = process.env.WHATSAPP_SENDER;
-
-async function sendWhatsAppMessage(to: string, message: string): Promise<{ success: boolean; error?: string }> {
-  if (!WHATSAPP_API_KEY || !WHATSAPP_SENDER) {
-    return { success: false, error: "WhatsApp not configured. Please set WHATSAPP_API_KEY and WHATSAPP_SENDER." };
-  }
-
+async function sendWhatsAppMessage(
+  to: string,
+  message: string,
+  apiKey: string,
+  _sender: string
+): Promise<{ success: boolean; error?: string }> {
   try {
     const phone = to.replace(/\D/g, "");
-    const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(message)}&apikey=${WHATSAPP_API_KEY}`;
-    const response = await fetch(url);
-    if (response.ok) {
+    const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(message)}&apikey=${apiKey}`;
+    const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    const text = await response.text();
+    if (response.ok && !text.toLowerCase().includes("error")) {
       return { success: true };
     }
-    return { success: false, error: `API returned ${response.status}` };
+    return { success: false, error: `API error: ${text.slice(0, 100)}` };
   } catch (err) {
     return { success: false, error: String(err) };
   }
@@ -32,6 +31,8 @@ async function getResidentBill(residentId: number, month: number, year: number) 
   const breakfastRate = settings?.breakfastRate ?? 30;
   const currency = settings?.currency ?? "₹";
   const messName = settings?.messName ?? "Hostel Mess";
+  const whatsappApiKey = settings?.whatsappApiKey ?? process.env.WHATSAPP_API_KEY ?? "";
+  const whatsappSender = settings?.whatsappSender ?? process.env.WHATSAPP_SENDER ?? "";
 
   const [resident] = await db
     .select()
@@ -67,16 +68,32 @@ async function getResidentBill(residentId: number, month: number, year: number) 
     totalDays: Math.round(totalDays * 100) / 100,
     totalAmount,
     dietRate,
+    breakfastRate,
     currency,
     messName,
     monthName,
     year,
+    whatsappApiKey,
+    whatsappSender,
   };
 }
 
 router.post("/whatsapp/send-bills", async (req, res) => {
   try {
     const { month, year } = SendMonthlyBillsBody.parse(req.body);
+
+    const [settings] = await db.select().from(settingsTable).limit(1);
+    const apiKey = settings?.whatsappApiKey ?? process.env.WHATSAPP_API_KEY ?? "";
+    const sender = settings?.whatsappSender ?? process.env.WHATSAPP_SENDER ?? "";
+
+    if (!apiKey || !sender) {
+      return res.status(400).json({
+        sent: 0,
+        failed: 0,
+        results: [],
+        message: "WhatsApp not configured. Please set your API key and sender number in Settings.",
+      });
+    }
 
     const residents = await db
       .select()
@@ -91,15 +108,17 @@ router.post("/whatsapp/send-bills", async (req, res) => {
       const bill = await getResidentBill(resident.id, month, year);
       if (!bill) continue;
 
-      const monthName = bill.monthName;
-      const message = `*${bill.messName} - Monthly Bill*\n\nDear ${resident.name},\n\nYour mess bill for *${monthName} ${year}*:\n\n✅ Present: ${bill.presentDays} days\n🔸 Half Day (P/2): ${bill.halfDays} days\n🍳 Breakfast Only: ${bill.breakfastDays} days\n\n💰 Diet Rate: ${bill.currency}${bill.dietRate}/day\n📊 Effective Days: ${bill.totalDays}\n\n*Total Amount: ${bill.currency}${bill.totalAmount}*\n\nPlease pay at your earliest convenience.\nThank you!`;
+      const message =
+        `*${bill.messName} - Monthly Bill*\n\nDear ${resident.name} (Room ${resident.roomNumber}),\n\nYour mess bill for *${bill.monthName} ${year}*:\n\n` +
+        `✅ Present: ${bill.presentDays} days\n` +
+        `🔸 Half Day (P/2): ${bill.halfDays} days\n` +
+        `🍳 Breakfast Only: ${bill.breakfastDays} days\n\n` +
+        `💰 Diet Rate: ${bill.currency}${bill.dietRate}/day\n` +
+        `📊 Effective Days: ${bill.totalDays}\n\n` +
+        `*Total Amount: ${bill.currency}${bill.totalAmount}*\n\nPlease pay at your earliest convenience. Thank you!`;
 
-      const result = await sendWhatsAppMessage(resident.whatsappNumber, message);
-      if (result.success) {
-        sent++;
-      } else {
-        failed++;
-      }
+      const result = await sendWhatsAppMessage(resident.whatsappNumber, message, apiKey, sender);
+      if (result.success) sent++; else failed++;
 
       results.push({
         residentId: resident.id,
@@ -126,10 +145,17 @@ router.post("/whatsapp/send-reminder", async (req, res) => {
       return res.status(404).json({ message: "Resident not found" });
     }
 
-    const defaultMessage = `*Payment Reminder - ${bill.messName}*\n\nDear ${bill.resident.name},\n\nThis is a reminder that your mess bill for *${bill.monthName} ${year}* is:\n\n*Total Due: ${bill.currency}${bill.totalAmount}*\n\nKindly make the payment at your earliest convenience.\nThank you!`;
+    if (!bill.whatsappApiKey || !bill.whatsappSender) {
+      return res.status(400).json({ message: "WhatsApp not configured. Please set your API key and sender number in Settings." });
+    }
+
+    const defaultMessage =
+      `*Payment Reminder - ${bill.messName}*\n\nDear ${bill.resident.name},\n\n` +
+      `This is a reminder that your mess bill for *${bill.monthName} ${year}* is:\n\n` +
+      `*Total Due: ${bill.currency}${bill.totalAmount}*\n\nKindly make the payment at your earliest convenience. Thank you!`;
 
     const message = customMessage || defaultMessage;
-    const result = await sendWhatsAppMessage(bill.resident.whatsappNumber, message);
+    const result = await sendWhatsAppMessage(bill.resident.whatsappNumber, message, bill.whatsappApiKey, bill.whatsappSender);
 
     if (result.success) {
       res.json({ message: "Reminder sent successfully" });

@@ -5,7 +5,7 @@ import { UpdateSettingsBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
-async function getOrCreateSettings() {
+export async function getOrCreateSettings() {
   const [existing] = await db.select().from(settingsTable).limit(1);
   if (existing) return existing;
   const [created] = await db.insert(settingsTable).values({}).returning();
@@ -16,7 +16,14 @@ router.get("/settings", async (req, res) => {
   try {
     const settings = await getOrCreateSettings();
     res.json({
-      ...settings,
+      id: settings.id,
+      messName: settings.messName,
+      dietRatePerDay: settings.dietRatePerDay,
+      breakfastRate: settings.breakfastRate,
+      currency: settings.currency,
+      whatsappApiKey: settings.whatsappApiKey ?? "",
+      whatsappSender: settings.whatsappSender ?? "",
+      hasWhatsapp: !!(settings.whatsappApiKey && settings.whatsappSender),
       updatedAt: settings.updatedAt.toISOString(),
     });
   } catch (err) {
@@ -36,12 +43,21 @@ router.put("/settings", async (req, res) => {
         dietRatePerDay: body.dietRatePerDay,
         breakfastRate: body.breakfastRate,
         currency: body.currency,
+        whatsappApiKey: body.whatsappApiKey ?? existing.whatsappApiKey,
+        whatsappSender: body.whatsappSender ?? existing.whatsappSender,
         updatedAt: new Date(),
       })
       .where(eq(settingsTable.id, existing.id))
       .returning();
     res.json({
-      ...updated,
+      id: updated.id,
+      messName: updated.messName,
+      dietRatePerDay: updated.dietRatePerDay,
+      breakfastRate: updated.breakfastRate,
+      currency: updated.currency,
+      whatsappApiKey: updated.whatsappApiKey ?? "",
+      whatsappSender: updated.whatsappSender ?? "",
+      hasWhatsapp: !!(updated.whatsappApiKey && updated.whatsappSender),
       updatedAt: updated.updatedAt.toISOString(),
     });
   } catch (err) {
