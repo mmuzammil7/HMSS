@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react"
+import React, { useState, useRef, useCallback } from "react"
 import { motion } from "framer-motion"
 import { 
   useGetBillingSummary, 
@@ -24,6 +24,23 @@ export default function Billing() {
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [sendResults, setSendResults] = useState<null | { sent: number; failed: number; results: any[] }>(null)
   const printRef = useRef<HTMLDivElement>(null)
+  const pendingAction = useRef<(() => void) | null>(null)
+
+  const requireAdmin = useCallback((fn: () => void) => {
+    if (!isAdmin) {
+      pendingAction.current = fn
+      setShowLoginModal(true)
+      return
+    }
+    fn()
+  }, [isAdmin])
+
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false)
+    const action = pendingAction.current
+    pendingAction.current = null
+    if (action) action()
+  }
 
   const { data: summary, isLoading } = useGetBillingSummary({ month, year })
 
@@ -47,16 +64,18 @@ export default function Billing() {
   })
 
   const handleSendAll = () => {
-    if (!isAdmin) { setShowLoginModal(true); return }
-    if (confirm(`Send WhatsApp bills to all residents for ${MONTHS[month-1]} ${year}?`)) {
-      setSendResults(null)
-      sendBillsMut.mutate({ data: { month, year } })
-    }
+    requireAdmin(() => {
+      if (confirm(`Send WhatsApp bills to all residents for ${MONTHS[month-1]} ${year}?`)) {
+        setSendResults(null)
+        sendBillsMut.mutate({ data: { month, year } })
+      }
+    })
   }
 
   const handleRemind = (residentId: number) => {
-    if (!isAdmin) { setShowLoginModal(true); return }
-    sendReminderMut.mutate({ data: { residentId, month, year } })
+    requireAdmin(() => {
+      sendReminderMut.mutate({ data: { residentId, month, year } })
+    })
   }
 
   const handlePrint = () => {
@@ -312,7 +331,7 @@ export default function Billing() {
       </div>
 
       {showLoginModal && (
-        <PinLoginModal onSuccess={() => setShowLoginModal(false)} onCancel={() => setShowLoginModal(false)} />
+        <PinLoginModal onSuccess={handleLoginSuccess} onCancel={() => { pendingAction.current = null; setShowLoginModal(false) }} />
       )}
     </motion.div>
   )
