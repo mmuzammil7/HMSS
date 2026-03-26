@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useRef } from "react"
 import { motion } from "framer-motion"
 import { useQueryClient } from "@tanstack/react-query"
 import { 
@@ -24,6 +24,7 @@ export default function Residents() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const { isAdmin } = useAuth()
+  const pendingAction = useRef<(() => void) | null>(null)
   
   const [name, setName] = useState("")
   const [roomNumber, setRoomNumber] = useState("")
@@ -40,8 +41,19 @@ export default function Residents() {
   const deleteMut = useDeleteResident({ mutation: { onSuccess: () => { invalidate(); toast({title:"Resident deleted!"}) } } })
 
   const requireAdmin = (fn: () => void) => {
-    if (!isAdmin) { setShowLoginModal(true); return }
+    if (!isAdmin) {
+      pendingAction.current = fn
+      setShowLoginModal(true)
+      return
+    }
     fn()
+  }
+
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false)
+    const action = pendingAction.current
+    pendingAction.current = null
+    if (action) action()
   }
 
   const openNew = () => requireAdmin(() => {
@@ -181,7 +193,7 @@ export default function Residents() {
       </Dialog>
 
       {showLoginModal && (
-        <PinLoginModal onSuccess={() => setShowLoginModal(false)} onCancel={() => setShowLoginModal(false)} />
+        <PinLoginModal onSuccess={handleLoginSuccess} onCancel={() => { pendingAction.current = null; setShowLoginModal(false) }} />
       )}
     </motion.div>
   )

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import { motion } from "framer-motion"
 import { useGetSettings, useUpdateSettings, useSetPin, useHasPin } from "@workspace/api-client-react"
 import { Save, Store, MessageCircle, Lock, Eye, EyeOff, ShieldCheck, ExternalLink } from "lucide-react"
@@ -12,6 +12,7 @@ import { PinLoginModal } from "@/components/PinLoginModal"
 export default function Settings() {
   const { isAdmin } = useAuth()
   const [showLoginModal, setShowLoginModal] = useState(false)
+  const pendingAction = useRef<(() => void) | null>(null)
   const { data: settings, isLoading } = useGetSettings()
   const { data: hasPinData } = useHasPin()
   const { toast } = useToast()
@@ -60,21 +61,39 @@ export default function Settings() {
     }
   })
 
+  const requireAdmin = (fn: () => void) => {
+    if (!isAdmin) {
+      pendingAction.current = fn
+      setShowLoginModal(true)
+      return
+    }
+    fn()
+  }
+
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false)
+    const action = pendingAction.current
+    pendingAction.current = null
+    if (action) action()
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isAdmin) { setShowLoginModal(true); return }
-    updateMut.mutate({
-      data: { messName, dietRatePerDay: dietRate, breakfastRate, currency, whatsappApiKey, whatsappSender }
+    requireAdmin(() => {
+      updateMut.mutate({
+        data: { messName, dietRatePerDay: dietRate, breakfastRate, currency, whatsappApiKey, whatsappSender }
+      })
     })
   }
 
   const handlePinChange = (e: React.FormEvent) => {
     e.preventDefault()
     setPinError("")
-    if (!isAdmin) { setShowLoginModal(true); return }
     if (newPin.length < 4) { setPinError("PIN must be at least 4 digits."); return }
     if (newPin !== confirmPin) { setPinError("New PINs do not match."); return }
-    setPinMut.mutate({ data: { currentPin: hasPinData?.hasPin ? currentPin : undefined, newPin } })
+    requireAdmin(() => {
+      setPinMut.mutate({ data: { currentPin: hasPinData?.hasPin ? currentPin : undefined, newPin } })
+    })
   }
 
   if (isLoading) return <div className="p-8 text-center animate-pulse">Loading settings...</div>
@@ -283,7 +302,7 @@ export default function Settings() {
       </Card>
 
       {showLoginModal && (
-        <PinLoginModal onSuccess={() => setShowLoginModal(false)} onCancel={() => setShowLoginModal(false)} />
+        <PinLoginModal onSuccess={handleLoginSuccess} onCancel={() => { pendingAction.current = null; setShowLoginModal(false) }} />
       )}
     </motion.div>
   )
