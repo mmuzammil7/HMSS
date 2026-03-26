@@ -8,20 +8,23 @@ import {
   useDeleteResident,
   type Resident
 } from "@workspace/api-client-react"
-import { Plus, Pencil, Trash2, Phone } from "lucide-react"
+import { Plus, Pencil, Trash2, Phone, Lock } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/contexts/AuthContext"
+import { PinLoginModal } from "@/components/PinLoginModal"
 
 export default function Residents() {
   const { data: residents = [], isLoading } = useGetResidents()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const { isAdmin } = useAuth()
   
-  // Form State
   const [name, setName] = useState("")
   const [roomNumber, setRoomNumber] = useState("")
   const [whatsappNumber, setWhatsappNumber] = useState("")
@@ -32,19 +35,28 @@ export default function Residents() {
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['/api/residents'] })
 
-  const createMut = useCreateResident({ mutation: { onSuccess: () => { invalidate(); setIsDialogOpen(false); toast({title:"Added!"}) } } })
-  const updateMut = useUpdateResident({ mutation: { onSuccess: () => { invalidate(); setIsDialogOpen(false); toast({title:"Updated!"}) } } })
-  const deleteMut = useDeleteResident({ mutation: { onSuccess: () => { invalidate(); toast({title:"Deleted!"}) } } })
+  const createMut = useCreateResident({ mutation: { onSuccess: () => { invalidate(); setIsDialogOpen(false); toast({title:"Resident added!"}) } } })
+  const updateMut = useUpdateResident({ mutation: { onSuccess: () => { invalidate(); setIsDialogOpen(false); toast({title:"Resident updated!"}) } } })
+  const deleteMut = useDeleteResident({ mutation: { onSuccess: () => { invalidate(); toast({title:"Resident deleted!"}) } } })
 
-  const openNew = () => {
+  const requireAdmin = (fn: () => void) => {
+    if (!isAdmin) { setShowLoginModal(true); return }
+    fn()
+  }
+
+  const openNew = () => requireAdmin(() => {
     setEditingId(null); setName(""); setRoomNumber(""); setWhatsappNumber(""); setIsActive(true);
     setIsDialogOpen(true);
-  }
+  })
 
-  const openEdit = (r: Resident) => {
+  const openEdit = (r: Resident) => requireAdmin(() => {
     setEditingId(r.id); setName(r.name); setRoomNumber(r.roomNumber); setWhatsappNumber(r.whatsappNumber); setIsActive(r.isActive);
     setIsDialogOpen(true);
-  }
+  })
+
+  const handleDelete = (r: Resident) => requireAdmin(() => {
+    if (confirm(`Delete ${r.name}? This cannot be undone.`)) deleteMut.mutate({ id: r.id })
+  })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -61,9 +73,18 @@ export default function Residents() {
           <p className="text-muted-foreground mt-1">Manage hostel members and their contact details.</p>
         </div>
         <Button onClick={openNew} className="gap-2">
-          <Plus className="w-4 h-4" /> Add Resident
+          {!isAdmin && <Lock className="w-4 h-4" />}
+          {isAdmin ? <Plus className="w-4 h-4" /> : null}
+          Add Resident
         </Button>
       </div>
+
+      {!isAdmin && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3 text-amber-800">
+          <Lock className="w-5 h-5 text-amber-600 shrink-0" />
+          <p className="text-sm font-medium">Admin login required to add, edit, or delete residents.</p>
+        </div>
+      )}
 
       <Card>
         <div className="overflow-x-auto">
@@ -107,7 +128,7 @@ export default function Residents() {
                       </Button>
                       <Button 
                         variant="ghost" size="icon" 
-                        onClick={() => { if(confirm('Delete resident?')) deleteMut.mutate({ id: r.id }) }} 
+                        onClick={() => handleDelete(r)} 
                         className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -136,8 +157,9 @@ export default function Residents() {
           </div>
           
           <div className="space-y-2">
-            <label className="text-sm font-medium">WhatsApp Number (with country code)</label>
+            <label className="text-sm font-medium">WhatsApp Number (with country code, no +)</label>
             <Input required value={whatsappNumber} onChange={e => setWhatsappNumber(e.target.value)} placeholder="e.g. 919876543210" />
+            <p className="text-xs text-muted-foreground">India: 91 + 10 digit number. Example: 919876543210</p>
           </div>
 
           <label className="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
@@ -157,6 +179,10 @@ export default function Residents() {
           </div>
         </form>
       </Dialog>
+
+      {showLoginModal && (
+        <PinLoginModal onSuccess={() => setShowLoginModal(false)} onCancel={() => setShowLoginModal(false)} />
+      )}
     </motion.div>
   )
 }

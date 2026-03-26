@@ -13,6 +13,23 @@ export interface SuccessMessage {
   message: string;
 }
 
+export interface VerifyPinRequest {
+  pin: string;
+}
+
+export interface VerifyPinResponse {
+  valid: boolean;
+}
+
+export interface SetPinRequest {
+  currentPin?: string;
+  newPin: string;
+}
+
+export interface HasPinResponse {
+  hasPin: boolean;
+}
+
 export interface Resident {
   id: number;
   name: string;
@@ -90,6 +107,9 @@ export interface MessSettings {
   dietRatePerDay: number;
   breakfastRate: number;
   currency: string;
+  whatsappApiKey?: string;
+  whatsappSender?: string;
+  hasWhatsapp: boolean;
   updatedAt: string;
 }
 
@@ -98,6 +118,8 @@ export interface UpdateSettingsRequest {
   dietRatePerDay: number;
   breakfastRate: number;
   currency: string;
+  whatsappApiKey?: string;
+  whatsappSender?: string;
 }
 
 export interface ResidentBill {

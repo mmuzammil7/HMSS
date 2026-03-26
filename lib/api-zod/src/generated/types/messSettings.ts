@@ -12,5 +12,8 @@ export interface MessSettings {
   dietRatePerDay: number;
   breakfastRate: number;
   currency: string;
+  whatsappApiKey?: string;
+  whatsappSender?: string;
+  hasWhatsapp: boolean;
   updatedAt: string;
 }

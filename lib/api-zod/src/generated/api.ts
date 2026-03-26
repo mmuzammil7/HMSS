@@ -15,6 +15,36 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
+ * @summary Verify admin PIN
+ */
+export const VerifyPinBody = zod.object({
+  pin: zod.string(),
+});
+
+export const VerifyPinResponse = zod.object({
+  valid: zod.boolean(),
+});
+
+/**
+ * @summary Set or change admin PIN
+ */
+export const SetPinBody = zod.object({
+  currentPin: zod.string().optional(),
+  newPin: zod.string(),
+});
+
+export const SetPinResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
+ * @summary Check if admin PIN is set
+ */
+export const HasPinResponse = zod.object({
+  hasPin: zod.boolean(),
+});
+
+/**
  * @summary Get all residents
  */
 export const GetResidentsResponseItem = zod.object({
@@ -143,6 +173,9 @@ export const GetSettingsResponse = zod.object({
   dietRatePerDay: zod.number(),
   breakfastRate: zod.number(),
   currency: zod.string(),
+  whatsappApiKey: zod.string().optional(),
+  whatsappSender: zod.string().optional(),
+  hasWhatsapp: zod.boolean(),
   updatedAt: zod.string(),
 });
 
@@ -154,6 +187,8 @@ export const UpdateSettingsBody = zod.object({
   dietRatePerDay: zod.number(),
   breakfastRate: zod.number(),
   currency: zod.string(),
+  whatsappApiKey: zod.string().optional(),
+  whatsappSender: zod.string().optional(),
 });
 
 export const UpdateSettingsResponse = zod.object({
@@ -162,6 +197,9 @@ export const UpdateSettingsResponse = zod.object({
   dietRatePerDay: zod.number(),
   breakfastRate: zod.number(),
   currency: zod.string(),
+  whatsappApiKey: zod.string().optional(),
+  whatsappSender: zod.string().optional(),
+  hasWhatsapp: zod.boolean(),
   updatedAt: zod.string(),
 });
 

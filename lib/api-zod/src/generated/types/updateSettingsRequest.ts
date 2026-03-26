@@ -11,4 +11,6 @@ export interface UpdateSettingsRequest {
   dietRatePerDay: number;
   breakfastRate: number;
   currency: string;
+  whatsappApiKey?: string;
+  whatsappSender?: string;
 }
