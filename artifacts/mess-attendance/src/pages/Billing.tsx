@@ -134,7 +134,7 @@ export default function Billing() {
           <Button
             onClick={handlePrint}
             disabled={isLoading || !summary?.bills?.length}
-            className="gap-2 rounded-xl h-10 bg-slate-900 hover:bg-slate-800 text-white shadow-sm"
+            className="gap-2 rounded-xl h-10 bg-primary hover:bg-primary/90 text-white shadow-sm"
           >
             <Printer className="w-4 h-4" /> Print
           </Button>
@@ -143,12 +143,12 @@ export default function Billing() {
 
       {/* Summary banner */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="sm:col-span-2 bg-slate-900 rounded-2xl p-6">
-          <p className="text-sm text-slate-400 font-medium">Total Collectable</p>
+        <div className="sm:col-span-2 bg-primary rounded-2xl p-6">
+          <p className="text-sm text-white/60 font-medium">Total Collectable</p>
           <p className="text-4xl font-display font-bold text-white mt-1">
             {isLoading ? "…" : formatCurrency(summary?.totalCollectable || 0, summary?.currency)}
           </p>
-          <p className="text-xs text-slate-500 mt-3">
+          <p className="text-xs text-white/40 mt-3">
             {summary?.bills?.length ?? 0} residents &middot; Veg {formatCurrency(summary?.vegDietRate ?? 0, summary?.currency)}/day &middot; Non-Veg {formatCurrency(summary?.nonVegDietRate ?? 0, summary?.currency)}/day
           </p>
         </div>
@@ -252,8 +252,8 @@ export default function Billing() {
                     </td>
                   </tr>
                 ))}
-                <tr className="bg-slate-900">
-                  <td colSpan={4} className="px-6 py-4 text-sm font-semibold text-slate-400 text-right">Total Collectable</td>
+                <tr className="bg-primary">
+                  <td colSpan={4} className="px-6 py-4 text-sm font-semibold text-white/60 text-right">Total Collectable</td>
                   <td className="px-4 py-4 text-base font-bold text-white">{formatCurrency(summary.totalCollectable, summary.currency)}</td>
                   <td />
                 </tr>
