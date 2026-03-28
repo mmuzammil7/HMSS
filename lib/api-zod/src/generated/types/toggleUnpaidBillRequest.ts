@@ -6,9 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface SendReminderRequest {
-  residentId: number;
-  month: number;
-  year: number;
-  customMessage?: string;
+export interface ToggleUnpaidBillRequest {
+  hasUnpaidBill: boolean;
 }

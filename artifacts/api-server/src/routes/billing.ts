@@ -10,7 +10,8 @@ router.get("/billing/summary", async (req, res) => {
     const { month, year } = GetBillingSummaryQueryParams.parse(req.query);
 
     const [settings] = await db.select().from(settingsTable).limit(1);
-    const dietRate = settings?.dietRatePerDay ?? 100;
+    const vegDietRate = settings?.vegDietRate ?? 100;
+    const nonVegDietRate = settings?.nonVegDietRate ?? 120;
     const breakfastRate = settings?.breakfastRate ?? 30;
     const currency = settings?.currency ?? "₹";
     const messName = settings?.messName ?? "Hostel Mess";
@@ -32,9 +33,8 @@ router.get("/billing/summary", async (req, res) => {
       );
 
     const bills = residents.map((resident) => {
-      const residentAttendance = attendance.filter(
-        (a) => a.residentId === resident.id
-      );
+      const dietRate = resident.dietType === "non-veg" ? nonVegDietRate : vegDietRate;
+      const residentAttendance = attendance.filter((a) => a.residentId === resident.id);
       const presentDays = residentAttendance.filter((a) => a.status === "present").length;
       const halfDays = residentAttendance.filter((a) => a.status === "half").length;
       const breakfastDays = residentAttendance.filter((a) => a.status === "breakfast").length;
@@ -46,7 +46,8 @@ router.get("/billing/summary", async (req, res) => {
         residentId: resident.id,
         residentName: resident.name,
         roomNumber: resident.roomNumber,
-        whatsappNumber: resident.whatsappNumber,
+        dietType: resident.dietType,
+        hasUnpaidBill: resident.hasUnpaidBill,
         presentDays,
         halfDays,
         breakfastDays,
@@ -63,7 +64,8 @@ router.get("/billing/summary", async (req, res) => {
       month,
       year,
       messName,
-      dietRatePerDay: dietRate,
+      vegDietRate,
+      nonVegDietRate,
       breakfastRate,
       currency,
       bills,

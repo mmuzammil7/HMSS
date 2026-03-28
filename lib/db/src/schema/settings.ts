@@ -5,12 +5,11 @@ import { z } from "zod/v4";
 export const settingsTable = pgTable("mess_settings", {
   id: serial("id").primaryKey(),
   messName: text("mess_name").notNull().default("Hostel Mess"),
-  dietRatePerDay: real("diet_rate_per_day").notNull().default(100),
+  vegDietRate: real("veg_diet_rate").notNull().default(100),
+  nonVegDietRate: real("non_veg_diet_rate").notNull().default(120),
   breakfastRate: real("breakfast_rate").notNull().default(30),
   currency: text("currency").notNull().default("₹"),
   adminPinHash: text("admin_pin_hash"),
-  whatsappApiKey: text("whatsapp_api_key"),
-  whatsappSender: text("whatsapp_sender"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 

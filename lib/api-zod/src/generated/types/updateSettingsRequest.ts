@@ -8,9 +8,8 @@
 
 export interface UpdateSettingsRequest {
   messName: string;
-  dietRatePerDay: number;
+  vegDietRate: number;
+  nonVegDietRate: number;
   breakfastRate: number;
   currency: string;
-  whatsappApiKey?: string;
-  whatsappSender?: string;
 }

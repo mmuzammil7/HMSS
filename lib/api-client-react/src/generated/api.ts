@@ -28,11 +28,9 @@ import type {
   MarkAttendanceRequest,
   MessSettings,
   Resident,
-  SendBillsRequest,
-  SendBillsResponse,
-  SendReminderRequest,
   SetPinRequest,
   SuccessMessage,
+  ToggleUnpaidBillRequest,
   UpdateSettingsRequest,
   VerifyPinRequest,
   VerifyPinResponse,
@@ -692,6 +690,93 @@ export const useDeleteResident = <
 };
 
 /**
+ * @summary Toggle unpaid bill flag for a resident
+ */
+export const getToggleUnpaidBillUrl = (id: number) => {
+  return `/api/residents/${id}/unpaid-bill`;
+};
+
+export const toggleUnpaidBill = async (
+  id: number,
+  toggleUnpaidBillRequest: ToggleUnpaidBillRequest,
+  options?: RequestInit,
+): Promise<Resident> => {
+  return customFetch<Resident>(getToggleUnpaidBillUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(toggleUnpaidBillRequest),
+  });
+};
+
+export const getToggleUnpaidBillMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof toggleUnpaidBill>>,
+    TError,
+    { id: number; data: BodyType<ToggleUnpaidBillRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof toggleUnpaidBill>>,
+  TError,
+  { id: number; data: BodyType<ToggleUnpaidBillRequest> },
+  TContext
+> => {
+  const mutationKey = ["toggleUnpaidBill"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof toggleUnpaidBill>>,
+    { id: number; data: BodyType<ToggleUnpaidBillRequest> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return toggleUnpaidBill(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ToggleUnpaidBillMutationResult = NonNullable<
+  Awaited<ReturnType<typeof toggleUnpaidBill>>
+>;
+export type ToggleUnpaidBillMutationBody = BodyType<ToggleUnpaidBillRequest>;
+export type ToggleUnpaidBillMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Toggle unpaid bill flag for a resident
+ */
+export const useToggleUnpaidBill = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof toggleUnpaidBill>>,
+    TError,
+    { id: number; data: BodyType<ToggleUnpaidBillRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof toggleUnpaidBill>>,
+  TError,
+  { id: number; data: BodyType<ToggleUnpaidBillRequest> },
+  TContext
+> => {
+  return useMutation(getToggleUnpaidBillMutationOptions(options));
+};
+
+/**
  * @summary Get attendance records
  */
 export const getGetAttendanceUrl = (params?: GetAttendanceParams) => {
@@ -1214,175 +1299,3 @@ export function useGetBillingSummary<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
-
-/**
- * @summary Send monthly bills via WhatsApp to all residents
- */
-export const getSendMonthlyBillsUrl = () => {
-  return `/api/whatsapp/send-bills`;
-};
-
-export const sendMonthlyBills = async (
-  sendBillsRequest: SendBillsRequest,
-  options?: RequestInit,
-): Promise<SendBillsResponse> => {
-  return customFetch<SendBillsResponse>(getSendMonthlyBillsUrl(), {
-    ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(sendBillsRequest),
-  });
-};
-
-export const getSendMonthlyBillsMutationOptions = <
-  TError = ErrorType<unknown>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof sendMonthlyBills>>,
-    TError,
-    { data: BodyType<SendBillsRequest> },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof sendMonthlyBills>>,
-  TError,
-  { data: BodyType<SendBillsRequest> },
-  TContext
-> => {
-  const mutationKey = ["sendMonthlyBills"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof sendMonthlyBills>>,
-    { data: BodyType<SendBillsRequest> }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return sendMonthlyBills(data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type SendMonthlyBillsMutationResult = NonNullable<
-  Awaited<ReturnType<typeof sendMonthlyBills>>
->;
-export type SendMonthlyBillsMutationBody = BodyType<SendBillsRequest>;
-export type SendMonthlyBillsMutationError = ErrorType<unknown>;
-
-/**
- * @summary Send monthly bills via WhatsApp to all residents
- */
-export const useSendMonthlyBills = <
-  TError = ErrorType<unknown>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof sendMonthlyBills>>,
-    TError,
-    { data: BodyType<SendBillsRequest> },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationResult<
-  Awaited<ReturnType<typeof sendMonthlyBills>>,
-  TError,
-  { data: BodyType<SendBillsRequest> },
-  TContext
-> => {
-  return useMutation(getSendMonthlyBillsMutationOptions(options));
-};
-
-/**
- * @summary Send payment reminder to a specific resident
- */
-export const getSendReminderUrl = () => {
-  return `/api/whatsapp/send-reminder`;
-};
-
-export const sendReminder = async (
-  sendReminderRequest: SendReminderRequest,
-  options?: RequestInit,
-): Promise<SuccessMessage> => {
-  return customFetch<SuccessMessage>(getSendReminderUrl(), {
-    ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(sendReminderRequest),
-  });
-};
-
-export const getSendReminderMutationOptions = <
-  TError = ErrorType<unknown>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof sendReminder>>,
-    TError,
-    { data: BodyType<SendReminderRequest> },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof sendReminder>>,
-  TError,
-  { data: BodyType<SendReminderRequest> },
-  TContext
-> => {
-  const mutationKey = ["sendReminder"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof sendReminder>>,
-    { data: BodyType<SendReminderRequest> }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return sendReminder(data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type SendReminderMutationResult = NonNullable<
-  Awaited<ReturnType<typeof sendReminder>>
->;
-export type SendReminderMutationBody = BodyType<SendReminderRequest>;
-export type SendReminderMutationError = ErrorType<unknown>;
-
-/**
- * @summary Send payment reminder to a specific resident
- */
-export const useSendReminder = <
-  TError = ErrorType<unknown>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof sendReminder>>,
-    TError,
-    { data: BodyType<SendReminderRequest> },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationResult<
-  Awaited<ReturnType<typeof sendReminder>>,
-  TError,
-  { data: BodyType<SendReminderRequest> },
-  TContext
-> => {
-  return useMutation(getSendReminderMutationOptions(options));
-};

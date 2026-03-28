@@ -6,7 +6,9 @@ export const residentsTable = pgTable("residents", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   roomNumber: text("room_number").notNull(),
-  whatsappNumber: text("whatsapp_number").notNull(),
+  whatsappNumber: text("whatsapp_number").notNull().default(""),
+  dietType: text("diet_type", { enum: ["veg", "non-veg"] }).notNull().default("veg"),
+  hasUnpaidBill: boolean("has_unpaid_bill").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

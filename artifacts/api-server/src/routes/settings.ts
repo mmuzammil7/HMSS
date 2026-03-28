@@ -12,20 +12,22 @@ export async function getOrCreateSettings() {
   return created;
 }
 
+function formatSettings(s: typeof settingsTable.$inferSelect) {
+  return {
+    id: s.id,
+    messName: s.messName,
+    vegDietRate: s.vegDietRate,
+    nonVegDietRate: s.nonVegDietRate,
+    breakfastRate: s.breakfastRate,
+    currency: s.currency,
+    updatedAt: s.updatedAt.toISOString(),
+  };
+}
+
 router.get("/settings", async (req, res) => {
   try {
     const settings = await getOrCreateSettings();
-    res.json({
-      id: settings.id,
-      messName: settings.messName,
-      dietRatePerDay: settings.dietRatePerDay,
-      breakfastRate: settings.breakfastRate,
-      currency: settings.currency,
-      whatsappApiKey: settings.whatsappApiKey ?? "",
-      whatsappSender: settings.whatsappSender ?? "",
-      hasWhatsapp: !!(settings.whatsappApiKey && settings.whatsappSender),
-      updatedAt: settings.updatedAt.toISOString(),
-    });
+    res.json(formatSettings(settings));
   } catch (err) {
     req.log.error({ err }, "Failed to get settings");
     res.status(500).json({ message: "Failed to get settings" });
@@ -40,26 +42,15 @@ router.put("/settings", async (req, res) => {
       .update(settingsTable)
       .set({
         messName: body.messName,
-        dietRatePerDay: body.dietRatePerDay,
+        vegDietRate: body.vegDietRate,
+        nonVegDietRate: body.nonVegDietRate,
         breakfastRate: body.breakfastRate,
         currency: body.currency,
-        whatsappApiKey: body.whatsappApiKey ?? existing.whatsappApiKey,
-        whatsappSender: body.whatsappSender ?? existing.whatsappSender,
         updatedAt: new Date(),
       })
       .where(eq(settingsTable.id, existing.id))
       .returning();
-    res.json({
-      id: updated.id,
-      messName: updated.messName,
-      dietRatePerDay: updated.dietRatePerDay,
-      breakfastRate: updated.breakfastRate,
-      currency: updated.currency,
-      whatsappApiKey: updated.whatsappApiKey ?? "",
-      whatsappSender: updated.whatsappSender ?? "",
-      hasWhatsapp: !!(updated.whatsappApiKey && updated.whatsappSender),
-      updatedAt: updated.updatedAt.toISOString(),
-    });
+    res.json(formatSettings(updated));
   } catch (err) {
     req.log.error({ err }, "Failed to update settings");
     res.status(400).json({ message: "Failed to update settings" });

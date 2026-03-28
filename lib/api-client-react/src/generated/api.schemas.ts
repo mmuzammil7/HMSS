@@ -30,20 +30,41 @@ export interface HasPinResponse {
   hasPin: boolean;
 }
 
+export type ResidentDietType =
+  (typeof ResidentDietType)[keyof typeof ResidentDietType];
+
+export const ResidentDietType = {
+  veg: "veg",
+  "non-veg": "non-veg",
+} as const;
+
 export interface Resident {
   id: number;
   name: string;
   roomNumber: string;
-  whatsappNumber: string;
+  dietType: ResidentDietType;
+  hasUnpaidBill: boolean;
   isActive: boolean;
   createdAt: string;
 }
 
+export type CreateResidentRequestDietType =
+  (typeof CreateResidentRequestDietType)[keyof typeof CreateResidentRequestDietType];
+
+export const CreateResidentRequestDietType = {
+  veg: "veg",
+  "non-veg": "non-veg",
+} as const;
+
 export interface CreateResidentRequest {
   name: string;
   roomNumber: string;
-  whatsappNumber: string;
+  dietType: CreateResidentRequestDietType;
   isActive?: boolean;
+}
+
+export interface ToggleUnpaidBillRequest {
+  hasUnpaidBill: boolean;
 }
 
 export type AttendanceRecordStatus =
@@ -104,29 +125,35 @@ export interface BulkAttendanceRequest {
 export interface MessSettings {
   id: number;
   messName: string;
-  dietRatePerDay: number;
+  vegDietRate: number;
+  nonVegDietRate: number;
   breakfastRate: number;
   currency: string;
-  whatsappApiKey?: string;
-  whatsappSender?: string;
-  hasWhatsapp: boolean;
   updatedAt: string;
 }
 
 export interface UpdateSettingsRequest {
   messName: string;
-  dietRatePerDay: number;
+  vegDietRate: number;
+  nonVegDietRate: number;
   breakfastRate: number;
   currency: string;
-  whatsappApiKey?: string;
-  whatsappSender?: string;
 }
+
+export type ResidentBillDietType =
+  (typeof ResidentBillDietType)[keyof typeof ResidentBillDietType];
+
+export const ResidentBillDietType = {
+  veg: "veg",
+  "non-veg": "non-veg",
+} as const;
 
 export interface ResidentBill {
   residentId: number;
   residentName: string;
   roomNumber: string;
-  whatsappNumber: string;
+  dietType: ResidentBillDietType;
+  hasUnpaidBill: boolean;
   presentDays: number;
   halfDays: number;
   breakfastDays: number;
@@ -140,37 +167,12 @@ export interface BillingSummary {
   month: number;
   year: number;
   messName: string;
-  dietRatePerDay: number;
+  vegDietRate: number;
+  nonVegDietRate: number;
   breakfastRate: number;
   currency: string;
   bills: ResidentBill[];
   totalCollectable: number;
-}
-
-export interface SendBillsRequest {
-  month: number;
-  year: number;
-}
-
-export type SendBillsResponseResultsItem = {
-  residentId: number;
-  residentName: string;
-  whatsappNumber: string;
-  success: boolean;
-  message: string;
-};
-
-export interface SendBillsResponse {
-  sent: number;
-  failed: number;
-  results: SendBillsResponseResultsItem[];
-}
-
-export interface SendReminderRequest {
-  residentId: number;
-  month: number;
-  year: number;
-  customMessage?: string;
 }
 
 export type GetAttendanceParams = {

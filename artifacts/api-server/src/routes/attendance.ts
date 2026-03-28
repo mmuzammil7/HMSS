@@ -57,34 +57,18 @@ router.post("/attendance", async (req, res) => {
   try {
     const body = MarkAttendanceBody.parse(req.body);
 
-    const existing = await db
-      .select()
-      .from(attendanceTable)
-      .where(
-        and(
-          eq(attendanceTable.residentId, body.residentId),
-          eq(attendanceTable.date, body.date)
-        )
-      )
-      .limit(1);
-
-    let record;
-    if (existing.length > 0) {
-      [record] = await db
-        .update(attendanceTable)
-        .set({ status: body.status })
-        .where(eq(attendanceTable.id, existing[0].id))
-        .returning();
-    } else {
-      [record] = await db
-        .insert(attendanceTable)
-        .values({
-          residentId: body.residentId,
-          date: body.date,
-          status: body.status,
-        })
-        .returning();
-    }
+    const [record] = await db
+      .insert(attendanceTable)
+      .values({
+        residentId: body.residentId,
+        date: body.date,
+        status: body.status,
+      })
+      .onConflictDoUpdate({
+        target: [attendanceTable.residentId, attendanceTable.date],
+        set: { status: body.status },
+      })
+      .returning();
 
     const resident = await db
       .select({ name: residentsTable.name })
@@ -109,34 +93,18 @@ router.post("/attendance/bulk", async (req, res) => {
     const results = [];
 
     for (const entry of body.entries) {
-      const existing = await db
-        .select()
-        .from(attendanceTable)
-        .where(
-          and(
-            eq(attendanceTable.residentId, entry.residentId),
-            eq(attendanceTable.date, body.date)
-          )
-        )
-        .limit(1);
-
-      let record;
-      if (existing.length > 0) {
-        [record] = await db
-          .update(attendanceTable)
-          .set({ status: entry.status })
-          .where(eq(attendanceTable.id, existing[0].id))
-          .returning();
-      } else {
-        [record] = await db
-          .insert(attendanceTable)
-          .values({
-            residentId: entry.residentId,
-            date: body.date,
-            status: entry.status,
-          })
-          .returning();
-      }
+      const [record] = await db
+        .insert(attendanceTable)
+        .values({
+          residentId: entry.residentId,
+          date: body.date,
+          status: entry.status,
+        })
+        .onConflictDoUpdate({
+          target: [attendanceTable.residentId, attendanceTable.date],
+          set: { status: entry.status },
+        })
+        .returning();
 
       const resident = await db
         .select({ name: residentsTable.name })

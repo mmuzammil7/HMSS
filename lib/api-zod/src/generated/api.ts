@@ -51,7 +51,8 @@ export const GetResidentsResponseItem = zod.object({
   id: zod.number(),
   name: zod.string(),
   roomNumber: zod.string(),
-  whatsappNumber: zod.string(),
+  dietType: zod.enum(["veg", "non-veg"]),
+  hasUnpaidBill: zod.boolean(),
   isActive: zod.boolean(),
   createdAt: zod.string(),
 });
@@ -63,7 +64,7 @@ export const GetResidentsResponse = zod.array(GetResidentsResponseItem);
 export const CreateResidentBody = zod.object({
   name: zod.string(),
   roomNumber: zod.string(),
-  whatsappNumber: zod.string(),
+  dietType: zod.enum(["veg", "non-veg"]),
   isActive: zod.boolean().optional(),
 });
 
@@ -77,7 +78,7 @@ export const UpdateResidentParams = zod.object({
 export const UpdateResidentBody = zod.object({
   name: zod.string(),
   roomNumber: zod.string(),
-  whatsappNumber: zod.string(),
+  dietType: zod.enum(["veg", "non-veg"]),
   isActive: zod.boolean().optional(),
 });
 
@@ -85,7 +86,8 @@ export const UpdateResidentResponse = zod.object({
   id: zod.number(),
   name: zod.string(),
   roomNumber: zod.string(),
-  whatsappNumber: zod.string(),
+  dietType: zod.enum(["veg", "non-veg"]),
+  hasUnpaidBill: zod.boolean(),
   isActive: zod.boolean(),
   createdAt: zod.string(),
 });
@@ -99,6 +101,27 @@ export const DeleteResidentParams = zod.object({
 
 export const DeleteResidentResponse = zod.object({
   message: zod.string(),
+});
+
+/**
+ * @summary Toggle unpaid bill flag for a resident
+ */
+export const ToggleUnpaidBillParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ToggleUnpaidBillBody = zod.object({
+  hasUnpaidBill: zod.boolean(),
+});
+
+export const ToggleUnpaidBillResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  roomNumber: zod.string(),
+  dietType: zod.enum(["veg", "non-veg"]),
+  hasUnpaidBill: zod.boolean(),
+  isActive: zod.boolean(),
+  createdAt: zod.string(),
 });
 
 /**
@@ -170,12 +193,10 @@ export const BulkMarkAttendanceResponse = zod.array(
 export const GetSettingsResponse = zod.object({
   id: zod.number(),
   messName: zod.string(),
-  dietRatePerDay: zod.number(),
+  vegDietRate: zod.number(),
+  nonVegDietRate: zod.number(),
   breakfastRate: zod.number(),
   currency: zod.string(),
-  whatsappApiKey: zod.string().optional(),
-  whatsappSender: zod.string().optional(),
-  hasWhatsapp: zod.boolean(),
   updatedAt: zod.string(),
 });
 
@@ -184,22 +205,19 @@ export const GetSettingsResponse = zod.object({
  */
 export const UpdateSettingsBody = zod.object({
   messName: zod.string(),
-  dietRatePerDay: zod.number(),
+  vegDietRate: zod.number(),
+  nonVegDietRate: zod.number(),
   breakfastRate: zod.number(),
   currency: zod.string(),
-  whatsappApiKey: zod.string().optional(),
-  whatsappSender: zod.string().optional(),
 });
 
 export const UpdateSettingsResponse = zod.object({
   id: zod.number(),
   messName: zod.string(),
-  dietRatePerDay: zod.number(),
+  vegDietRate: zod.number(),
+  nonVegDietRate: zod.number(),
   breakfastRate: zod.number(),
   currency: zod.string(),
-  whatsappApiKey: zod.string().optional(),
-  whatsappSender: zod.string().optional(),
-  hasWhatsapp: zod.boolean(),
   updatedAt: zod.string(),
 });
 
@@ -215,7 +233,8 @@ export const GetBillingSummaryResponse = zod.object({
   month: zod.number(),
   year: zod.number(),
   messName: zod.string(),
-  dietRatePerDay: zod.number(),
+  vegDietRate: zod.number(),
+  nonVegDietRate: zod.number(),
   breakfastRate: zod.number(),
   currency: zod.string(),
   bills: zod.array(
@@ -223,7 +242,8 @@ export const GetBillingSummaryResponse = zod.object({
       residentId: zod.number(),
       residentName: zod.string(),
       roomNumber: zod.string(),
-      whatsappNumber: zod.string(),
+      dietType: zod.enum(["veg", "non-veg"]),
+      hasUnpaidBill: zod.boolean(),
       presentDays: zod.number(),
       halfDays: zod.number(),
       breakfastDays: zod.number(),
@@ -234,40 +254,4 @@ export const GetBillingSummaryResponse = zod.object({
     }),
   ),
   totalCollectable: zod.number(),
-});
-
-/**
- * @summary Send monthly bills via WhatsApp to all residents
- */
-export const SendMonthlyBillsBody = zod.object({
-  month: zod.number(),
-  year: zod.number(),
-});
-
-export const SendMonthlyBillsResponse = zod.object({
-  sent: zod.number(),
-  failed: zod.number(),
-  results: zod.array(
-    zod.object({
-      residentId: zod.number(),
-      residentName: zod.string(),
-      whatsappNumber: zod.string(),
-      success: zod.boolean(),
-      message: zod.string(),
-    }),
-  ),
-});
-
-/**
- * @summary Send payment reminder to a specific resident
- */
-export const SendReminderBody = zod.object({
-  residentId: zod.number(),
-  month: zod.number(),
-  year: zod.number(),
-  customMessage: zod.string().optional(),
-});
-
-export const SendReminderResponse = zod.object({
-  message: zod.string(),
 });

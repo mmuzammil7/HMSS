@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react"
 import { motion } from "framer-motion"
 import { useGetSettings, useUpdateSettings, useSetPin, useHasPin } from "@workspace/api-client-react"
-import { Save, Store, MessageCircle, Lock, Eye, EyeOff, ShieldCheck, ExternalLink } from "lucide-react"
+import { Save, Store, Lock, Eye, EyeOff, ShieldCheck, Leaf, Drumstick } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,14 +18,11 @@ export default function Settings() {
   const { toast } = useToast()
   
   const [messName, setMessName] = useState("")
-  const [dietRate, setDietRate] = useState(0)
+  const [vegDietRate, setVegDietRate] = useState(0)
+  const [nonVegDietRate, setNonVegDietRate] = useState(0)
   const [breakfastRate, setBreakfastRate] = useState(0)
   const [currency, setCurrency] = useState("₹")
-  const [whatsappApiKey, setWhatsappApiKey] = useState("")
-  const [whatsappSender, setWhatsappSender] = useState("")
-  const [showApiKey, setShowApiKey] = useState(false)
 
-  // PIN change form
   const [currentPin, setCurrentPin] = useState("")
   const [newPin, setNewPin] = useState("")
   const [confirmPin, setConfirmPin] = useState("")
@@ -35,11 +32,10 @@ export default function Settings() {
   useEffect(() => {
     if (settings) {
       setMessName(settings.messName)
-      setDietRate(settings.dietRatePerDay)
+      setVegDietRate(settings.vegDietRate)
+      setNonVegDietRate(settings.nonVegDietRate)
       setBreakfastRate(settings.breakfastRate)
       setCurrency(settings.currency)
-      setWhatsappApiKey(settings.whatsappApiKey ?? "")
-      setWhatsappSender(settings.whatsappSender ?? "")
     }
   }, [settings])
 
@@ -81,7 +77,7 @@ export default function Settings() {
     e.preventDefault()
     requireAdmin(() => {
       updateMut.mutate({
-        data: { messName, dietRatePerDay: dietRate, breakfastRate, currency, whatsappApiKey, whatsappSender }
+        data: { messName, vegDietRate, nonVegDietRate, breakfastRate, currency }
       })
     })
   }
@@ -103,7 +99,7 @@ export default function Settings() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-display font-bold text-foreground">Settings</h1>
-          <p className="text-muted-foreground mt-1">Configure mess info, rates, and integrations.</p>
+          <p className="text-muted-foreground mt-1">Configure mess info, billing rates, and security.</p>
         </div>
         {!isAdmin && (
           <Button variant="outline" onClick={() => setShowLoginModal(true)} className="gap-2">
@@ -119,7 +115,6 @@ export default function Settings() {
         </div>
       )}
 
-      {/* General Settings */}
       <Card>
         <CardContent className="p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -138,97 +133,54 @@ export default function Settings() {
               </div>
             </div>
 
-            <div className="space-y-4 pb-6 border-b">
+            <div className="space-y-4">
               <h3 className="font-semibold text-lg">Billing Rates</h3>
+              <p className="text-sm text-muted-foreground -mt-2">Set different daily rates for vegetarian and non-vegetarian residents.</p>
+
               <div className="grid sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Diet Rate (Per Day)</label>
+                  <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                    <Leaf className="w-4 h-4 text-emerald-600" /> Veg Diet Rate (Per Day)
+                  </label>
                   <div className="relative">
                     <span className="absolute left-4 top-3 text-muted-foreground">{currency}</span>
-                    <Input type="number" step="0.01" value={dietRate} onChange={e => setDietRate(parseFloat(e.target.value))} required className="pl-8" disabled={!isAdmin} />
+                    <Input type="number" step="0.01" value={vegDietRate} onChange={e => setVegDietRate(parseFloat(e.target.value))} required className="pl-8" disabled={!isAdmin} />
                   </div>
-                  <p className="text-xs text-muted-foreground">Applied for 'Present' and half for 'P/2'.</p>
+                  <p className="text-xs text-muted-foreground">Applied for vegetarian residents.</p>
                 </div>
+
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Breakfast Only Rate</label>
+                  <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                    <Drumstick className="w-4 h-4 text-orange-500" /> Non-Veg Diet Rate (Per Day)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-3 text-muted-foreground">{currency}</span>
+                    <Input type="number" step="0.01" value={nonVegDietRate} onChange={e => setNonVegDietRate(parseFloat(e.target.value))} required className="pl-8" disabled={!isAdmin} />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Applied for non-vegetarian residents.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">Breakfast Only Rate (Per Day)</label>
                   <div className="relative">
                     <span className="absolute left-4 top-3 text-muted-foreground">{currency}</span>
                     <Input type="number" step="0.01" value={breakfastRate} onChange={e => setBreakfastRate(parseFloat(e.target.value))} required className="pl-8" disabled={!isAdmin} />
                   </div>
-                  <p className="text-xs text-muted-foreground">Fixed rate for 'Breakfast' days.</p>
+                  <p className="text-xs text-muted-foreground">Fixed rate for 'Breakfast Only' days (same for all).</p>
                 </div>
               </div>
-            </div>
 
-            {/* WhatsApp Config */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 text-emerald-600 mb-2">
-                <MessageCircle className="w-5 h-5" />
-                <h3 className="font-semibold text-lg">WhatsApp Integration</h3>
+              <div className="pt-2">
+                <Button type="submit" disabled={updateMut.isPending || !isAdmin} className="gap-2 h-12 px-8 text-base">
+                  <Save className="w-5 h-5" />
+                  {updateMut.isPending ? "Saving..." : "Save Settings"}
+                </Button>
               </div>
-              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800 space-y-2">
-                <p className="font-semibold">How to get your API key (Free):</p>
-                <ol className="list-decimal list-inside space-y-1 text-emerald-700">
-                  <li>Send "I allow callmebot to send me messages" to <strong>+34 644 48 26 25</strong> on WhatsApp</li>
-                  <li>You'll receive your personal API key within 2 minutes</li>
-                  <li>Enter your phone number (with country code, no +) and the API key below</li>
-                </ol>
-                <a href="https://www.callmebot.com/blog/free-api-whatsapp-messages/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-600 hover:underline font-medium mt-2">
-                  Full setup guide <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Your WhatsApp Number (with country code)</label>
-                  <Input
-                    value={whatsappSender}
-                    onChange={e => setWhatsappSender(e.target.value)}
-                    placeholder="e.g. 919876543210"
-                    disabled={!isAdmin}
-                    className="max-w-md"
-                  />
-                  <p className="text-xs text-muted-foreground">This is YOUR number (the manager's), not the residents'. Bills are sent from this account.</p>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">CallMeBot API Key</label>
-                  <div className="relative max-w-md">
-                    <Input
-                      type={showApiKey ? "text" : "password"}
-                      value={whatsappApiKey}
-                      onChange={e => setWhatsappApiKey(e.target.value)}
-                      placeholder="Your API key"
-                      disabled={!isAdmin}
-                      className="pr-12"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                    >
-                      {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-                {settings?.hasWhatsapp && (
-                  <div className="flex items-center gap-2 text-emerald-600 text-sm font-medium">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                    WhatsApp is configured and ready
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <Button type="submit" disabled={updateMut.isPending || !isAdmin} className="gap-2 h-12 px-8 text-base">
-                <Save className="w-5 h-5" />
-                {updateMut.isPending ? "Saving..." : "Save Settings"}
-              </Button>
             </div>
           </form>
         </CardContent>
       </Card>
 
-      {/* PIN Management */}
       <Card>
         <CardContent className="p-8">
           <div className="flex items-center gap-3 mb-6">
@@ -245,17 +197,15 @@ export default function Settings() {
             {hasPinData?.hasPin && (
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700">Current PIN</label>
-                <div className="relative">
-                  <Input
-                    type={showPins ? "text" : "password"}
-                    inputMode="numeric"
-                    value={currentPin}
-                    onChange={e => setCurrentPin(e.target.value.replace(/\D/g, ""))}
-                    placeholder="Enter current PIN"
-                    maxLength={10}
-                    disabled={!isAdmin}
-                  />
-                </div>
+                <Input
+                  type={showPins ? "text" : "password"}
+                  inputMode="numeric"
+                  value={currentPin}
+                  onChange={e => setCurrentPin(e.target.value.replace(/\D/g, ""))}
+                  placeholder="Enter current PIN"
+                  maxLength={10}
+                  disabled={!isAdmin}
+                />
               </div>
             )}
             <div className="space-y-2">
@@ -271,11 +221,7 @@ export default function Settings() {
                   disabled={!isAdmin}
                   className="pr-12"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPins(!showPins)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                >
+                <button type="button" onClick={() => setShowPins(!showPins)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                   {showPins ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
