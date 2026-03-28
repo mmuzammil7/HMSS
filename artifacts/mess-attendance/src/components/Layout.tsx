@@ -9,12 +9,8 @@ import {
   Menu,
   X,
   Soup,
-  LogOut,
-  Lock
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useAuth } from "@/contexts/AuthContext"
-import { PinLoginModal } from "@/components/PinLoginModal"
 
 const navItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -27,8 +23,6 @@ const navItems = [
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [showLoginModal, setShowLoginModal] = useState(false)
-  const { isAdmin, logout } = useAuth()
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -61,33 +55,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             )
           })}
         </nav>
-
-        {/* Admin section */}
-        <div className="px-4 py-4 border-t border-slate-800">
-          {isAdmin ? (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-900/30 border border-emerald-700/30">
-                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs text-emerald-400 font-medium">Admin Mode Active</span>
-              </div>
-              <button
-                onClick={logout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200"
-              >
-                <LogOut className="w-5 h-5" />
-                Logout Admin
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowLoginModal(true)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200"
-            >
-              <Lock className="w-5 h-5" />
-              Admin Login
-            </button>
-          )}
-        </div>
       </aside>
 
       {/* Mobile top bar */}
@@ -97,16 +64,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <span className="font-display font-bold text-lg">MessMate</span>
         </div>
         <div className="flex items-center gap-2">
-          {isAdmin && (
-            <button onClick={logout} className="p-2 text-slate-400 hover:text-white">
-              <LogOut className="w-5 h-5" />
-            </button>
-          )}
-          {!isAdmin && (
-            <button onClick={() => setShowLoginModal(true)} className="p-2 text-slate-400 hover:text-white">
-              <Lock className="w-5 h-5" />
-            </button>
-          )}
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -145,13 +102,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
-
-      {showLoginModal && (
-        <PinLoginModal
-          onSuccess={() => setShowLoginModal(false)}
-          onCancel={() => setShowLoginModal(false)}
-        />
-      )}
     </div>
   )
 }

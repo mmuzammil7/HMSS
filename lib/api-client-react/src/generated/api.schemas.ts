@@ -13,23 +13,6 @@ export interface SuccessMessage {
   message: string;
 }
 
-export interface VerifyPinRequest {
-  pin: string;
-}
-
-export interface VerifyPinResponse {
-  valid: boolean;
-}
-
-export interface SetPinRequest {
-  currentPin?: string;
-  newPin: string;
-}
-
-export interface HasPinResponse {
-  hasPin: boolean;
-}
-
 export type ResidentDietType =
   (typeof ResidentDietType)[keyof typeof ResidentDietType];
 

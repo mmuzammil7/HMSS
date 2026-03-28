@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react"
+import React, { useState } from "react"
 import { motion } from "framer-motion"
 import { useQueryClient } from "@tanstack/react-query"
 import { 
@@ -9,23 +9,18 @@ import {
   useToggleUnpaidBill,
   type Resident
 } from "@workspace/api-client-react"
-import { Plus, Pencil, Trash2, Lock, AlertCircle, CheckCircle2, Leaf, Drumstick } from "lucide-react"
+import { Plus, Pencil, Trash2, AlertCircle, CheckCircle2, Leaf, Drumstick } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
-import { useAuth } from "@/contexts/AuthContext"
-import { PinLoginModal } from "@/components/PinLoginModal"
 
 export default function Residents() {
   const { data: residents = [], isLoading } = useGetResidents()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [showLoginModal, setShowLoginModal] = useState(false)
-  const { isAdmin } = useAuth()
-  const pendingAction = useRef<(() => void) | null>(null)
   
   const [name, setName] = useState("")
   const [roomNumber, setRoomNumber] = useState("")
@@ -42,40 +37,24 @@ export default function Residents() {
   const deleteMut = useDeleteResident({ mutation: { onSuccess: () => { invalidate(); toast({ title: "Resident deleted!" }) } } })
   const toggleUnpaidMut = useToggleUnpaidBill({ mutation: { onSuccess: () => { invalidate() } } })
 
-  const requireAdmin = (fn: () => void) => {
-    if (!isAdmin) {
-      pendingAction.current = fn
-      setShowLoginModal(true)
-      return
-    }
-    fn()
-  }
-
-  const handleLoginSuccess = () => {
-    setShowLoginModal(false)
-    const action = pendingAction.current
-    pendingAction.current = null
-    if (action) action()
-  }
-
-  const openNew = () => requireAdmin(() => {
+  const openNew = () => {
     setEditingId(null); setName(""); setRoomNumber(""); setDietType("veg"); setIsActive(true)
     setIsDialogOpen(true)
-  })
+  }
 
-  const openEdit = (r: Resident) => requireAdmin(() => {
+  const openEdit = (r: Resident) => {
     setEditingId(r.id); setName(r.name); setRoomNumber(r.roomNumber)
     setDietType((r.dietType ?? "veg") as "veg" | "non-veg"); setIsActive(r.isActive)
     setIsDialogOpen(true)
-  })
+  }
 
-  const handleDelete = (r: Resident) => requireAdmin(() => {
+  const handleDelete = (r: Resident) => {
     if (confirm(`Delete ${r.name}? This cannot be undone.`)) deleteMut.mutate({ id: r.id })
-  })
+  }
 
-  const handleToggleUnpaid = (r: Resident) => requireAdmin(() => {
+  const handleToggleUnpaid = (r: Resident) => {
     toggleUnpaidMut.mutate({ id: r.id, data: { hasUnpaidBill: !r.hasUnpaidBill } })
-  })
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -92,18 +71,10 @@ export default function Residents() {
           <p className="text-muted-foreground mt-1">Manage hostel members and their diet preferences.</p>
         </div>
         <Button onClick={openNew} className="gap-2">
-          {!isAdmin && <Lock className="w-4 h-4" />}
-          {isAdmin && <Plus className="w-4 h-4" />}
+          <Plus className="w-4 h-4" />
           Add Resident
         </Button>
       </div>
-
-      {!isAdmin && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3 text-amber-800">
-          <Lock className="w-5 h-5 text-amber-600 shrink-0" />
-          <p className="text-sm font-medium">Admin login required to add, edit, or delete residents.</p>
-        </div>
-      )}
 
       <Card>
         <div className="overflow-x-auto">
@@ -255,10 +226,6 @@ export default function Residents() {
           </div>
         </form>
       </Dialog>
-
-      {showLoginModal && (
-        <PinLoginModal onSuccess={handleLoginSuccess} onCancel={() => { pendingAction.current = null; setShowLoginModal(false) }} />
-      )}
     </motion.div>
   )
 }
