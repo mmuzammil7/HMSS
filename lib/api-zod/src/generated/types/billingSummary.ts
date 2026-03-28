@@ -11,7 +11,8 @@ export interface BillingSummary {
   month: number;
   year: number;
   messName: string;
-  dietRatePerDay: number;
+  vegDietRate: number;
+  nonVegDietRate: number;
   breakfastRate: number;
   currency: string;
   bills: ResidentBill[];

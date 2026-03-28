@@ -20,12 +20,12 @@ Hostel Mess Attendance & Billing Management System — pnpm workspace monorepo u
 ## Application Features
 
 ### Hostel Mess Manager (`artifacts/mess-attendance`)
-- **Dashboard**: Live overview — active residents, today's attendance stats, current billing rates
-- **Attendance Page**: Mark daily attendance for all residents — Present, P/2 (half day), Absent, Breakfast Only
-- **Residents Page**: Add/edit/delete residents with room numbers and WhatsApp numbers
-- **Billing Page**: Monthly bill calculation per resident. Formula: `totalAmount = (presentDays + halfDays*0.5 + breakfastDays*(breakfastRate/dietRate)) * dietRatePerDay`
-- **Settings Page**: Configure mess name, diet rate per day, breakfast rate, currency
-- **WhatsApp Messaging**: Send monthly bills and payment reminders via WhatsApp (requires WHATSAPP_API_KEY and WHATSAPP_SENDER env vars — uses CallMeBot API)
+- **Dashboard**: Live overview — active residents, today's attendance stats, veg/non-veg billing rates
+- **Attendance Page**: Mark daily attendance for all residents — Present, P/2 (half day), Absent, Breakfast Only. Atomic upsert (ON CONFLICT DO UPDATE) prevents race conditions.
+- **Residents Page**: Add/edit/delete residents with room number, diet type (veg/non-veg), and unpaid bill flag
+- **Billing Page**: Monthly bill calculation per resident. Veg and non-veg residents billed at separate rates. Toggle unpaid bill status per resident. Print as PDF (opens print dialog).
+- **Settings Page**: Configure mess name, separate veg/non-veg diet rates, breakfast rate, currency, and admin PIN
+- **Admin PIN**: All destructive actions (add/edit/delete residents, billing changes, settings updates) require PIN. PIN stored as SHA256 hash server-side.
 
 ## Structure
 

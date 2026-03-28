@@ -5,10 +5,11 @@
  * Hostel Mess Attendance & Billing API
  * OpenAPI spec version: 0.1.0
  */
+import type { CreateResidentRequestDietType } from "./createResidentRequestDietType";
 
 export interface CreateResidentRequest {
   name: string;
   roomNumber: string;
-  whatsappNumber: string;
+  dietType: CreateResidentRequestDietType;
   isActive?: boolean;
 }

@@ -5,12 +5,14 @@
  * Hostel Mess Attendance & Billing API
  * OpenAPI spec version: 0.1.0
  */
+import type { ResidentBillDietType } from "./residentBillDietType";
 
 export interface ResidentBill {
   residentId: number;
   residentName: string;
   roomNumber: string;
-  whatsappNumber: string;
+  dietType: ResidentBillDietType;
+  hasUnpaidBill: boolean;
   presentDays: number;
   halfDays: number;
   breakfastDays: number;

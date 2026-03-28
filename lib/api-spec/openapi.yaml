@@ -12,7 +12,6 @@ tags:
   - name: attendance
   - name: settings
   - name: billing
-  - name: whatsapp
   - name: auth
 
 paths:
@@ -154,6 +153,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessMessage"
 
+  /residents/{id}/unpaid-bill:
+    patch:
+      operationId: toggleUnpaidBill
+      tags: [residents]
+      summary: Toggle unpaid bill flag for a resident
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ToggleUnpaidBillRequest"
+      responses:
+        "200":
+          description: Flag updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resident"
+
   /attendance:
     get:
       operationId: getAttendance
@@ -278,44 +302,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/BillingSummary"
 
-  /whatsapp/send-bills:
-    post:
-      operationId: sendMonthlyBills
-      tags: [whatsapp]
-      summary: Send monthly bills via WhatsApp to all residents
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SendBillsRequest"
-      responses:
-        "200":
-          description: Bills sent
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SendBillsResponse"
-
-  /whatsapp/send-reminder:
-    post:
-      operationId: sendReminder
-      tags: [whatsapp]
-      summary: Send payment reminder to a specific resident
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SendReminderRequest"
-      responses:
-        "200":
-          description: Reminder sent
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SuccessMessage"
-
 components:
   schemas:
     HealthStatus:
@@ -377,8 +363,11 @@ components:
           type: string
         roomNumber:
           type: string
-        whatsappNumber:
+        dietType:
           type: string
+          enum: [veg, non-veg]
+        hasUnpaidBill:
+          type: boolean
         isActive:
           type: boolean
         createdAt:
@@ -387,7 +376,8 @@ components:
         - id
         - name
         - roomNumber
-        - whatsappNumber
+        - dietType
+        - hasUnpaidBill
         - isActive
         - createdAt
 
@@ -398,14 +388,23 @@ components:
           type: string
         roomNumber:
           type: string
-        whatsappNumber:
+        dietType:
           type: string
+          enum: [veg, non-veg]
         isActive:
           type: boolean
       required:
         - name
         - roomNumber
-        - whatsappNumber
+        - dietType
+
+    ToggleUnpaidBillRequest:
+      type: object
+      properties:
+        hasUnpaidBill:
+          type: boolean
+      required:
+        - hasUnpaidBill
 
     AttendanceRecord:
       type: object
@@ -475,27 +474,23 @@ components:
           type: integer
         messName:
           type: string
-        dietRatePerDay:
+        vegDietRate:
+          type: number
+        nonVegDietRate:
           type: number
         breakfastRate:
           type: number
         currency:
           type: string
-        whatsappApiKey:
-          type: string
-        whatsappSender:
-          type: string
-        hasWhatsapp:
-          type: boolean
         updatedAt:
           type: string
       required:
         - id
         - messName
-        - dietRatePerDay
+        - vegDietRate
+        - nonVegDietRate
         - breakfastRate
         - currency
-        - hasWhatsapp
         - updatedAt
 
     UpdateSettingsRequest:
@@ -503,19 +498,18 @@ components:
       properties:
         messName:
           type: string
-        dietRatePerDay:
+        vegDietRate:
+          type: number
+        nonVegDietRate:
           type: number
         breakfastRate:
           type: number
         currency:
           type: string
-        whatsappApiKey:
-          type: string
-        whatsappSender:
-          type: string
       required:
         - messName
-        - dietRatePerDay
+        - vegDietRate
+        - nonVegDietRate
         - breakfastRate
         - currency
 
@@ -528,8 +522,11 @@ components:
           type: string
         roomNumber:
           type: string
-        whatsappNumber:
+        dietType:
           type: string
+          enum: [veg, non-veg]
+        hasUnpaidBill:
+          type: boolean
         presentDays:
           type: number
         halfDays:
@@ -548,7 +545,8 @@ components:
         - residentId
         - residentName
         - roomNumber
-        - whatsappNumber
+        - dietType
+        - hasUnpaidBill
         - presentDays
         - halfDays
         - breakfastDays
@@ -566,7 +564,9 @@ components:
           type: integer
         messName:
           type: string
-        dietRatePerDay:
+        vegDietRate:
+          type: number
+        nonVegDietRate:
           type: number
         breakfastRate:
           type: number
@@ -582,68 +582,9 @@ components:
         - month
         - year
         - messName
-        - dietRatePerDay
+        - vegDietRate
+        - nonVegDietRate
         - breakfastRate
         - currency
         - bills
         - totalCollectable
-
-    SendBillsRequest:
-      type: object
-      properties:
-        month:
-          type: integer
-        year:
-          type: integer
-      required:
-        - month
-        - year
-
-    SendBillsResponse:
-      type: object
-      properties:
-        sent:
-          type: integer
-        failed:
-          type: integer
-        results:
-          type: array
-          items:
-            type: object
-            properties:
-              residentId:
-                type: integer
-              residentName:
-                type: string
-              whatsappNumber:
-                type: string
-              success:
-                type: boolean
-              message:
-                type: string
-            required:
-              - residentId
-              - residentName
-              - whatsappNumber
-              - success
-              - message
-      required:
-        - sent
-        - failed
-        - results
-
-    SendReminderRequest:
-      type: object
-      properties:
-        residentId:
-          type: integer
-        month:
-          type: integer
-        year:
-          type: integer
-        customMessage:
-          type: string
-      required:
-        - residentId
-        - month
-        - year

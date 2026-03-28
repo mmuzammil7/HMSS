@@ -138,14 +138,18 @@ export default function Dashboard() {
             <h3 className="text-lg font-bold font-display mb-1 text-blue-100">Current Rates</h3>
             <p className="text-sm text-blue-200 mb-8">Settings active for {format(new Date(), 'MMMM yyyy')}</p>
             
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div>
-                <p className="text-blue-200 text-sm font-medium mb-1">Full Diet Rate</p>
-                <p className="text-4xl font-display font-bold">{formatCurrency(settings?.dietRatePerDay || 0, settings?.currency)}<span className="text-lg text-blue-300 font-normal">/day</span></p>
+                <p className="text-blue-200 text-sm font-medium mb-1">🌿 Veg Diet Rate</p>
+                <p className="text-3xl font-display font-bold">{formatCurrency(settings?.vegDietRate || 0, settings?.currency)}<span className="text-base text-blue-300 font-normal">/day</span></p>
               </div>
               <div>
-                <p className="text-blue-200 text-sm font-medium mb-1">Breakfast Only Rate</p>
-                <p className="text-2xl font-display font-bold">{formatCurrency(settings?.breakfastRate || 0, settings?.currency)}<span className="text-sm text-blue-300 font-normal">/day</span></p>
+                <p className="text-blue-200 text-sm font-medium mb-1">🍗 Non-Veg Diet Rate</p>
+                <p className="text-3xl font-display font-bold">{formatCurrency(settings?.nonVegDietRate || 0, settings?.currency)}<span className="text-base text-blue-300 font-normal">/day</span></p>
+              </div>
+              <div>
+                <p className="text-blue-200 text-sm font-medium mb-1">☕ Breakfast Only Rate</p>
+                <p className="text-xl font-display font-bold">{formatCurrency(settings?.breakfastRate || 0, settings?.currency)}<span className="text-sm text-blue-300 font-normal">/day</span></p>
               </div>
             </div>
           </CardContent>
