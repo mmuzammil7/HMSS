@@ -114,20 +114,20 @@ export default function Dashboard() {
         </div>
 
         {/* Rates card */}
-        <div className="bg-slate-900 rounded-2xl p-6 flex flex-col justify-between">
+        <div className="bg-primary rounded-2xl p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4 text-slate-400" />
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Rates</p>
+              <TrendingUp className="w-4 h-4 text-white/50" />
+              <p className="text-xs font-semibold text-white/60 uppercase tracking-wider">Current Rates</p>
             </div>
-            <p className="text-sm text-slate-500 mt-0.5">{format(new Date(), 'MMMM yyyy')}</p>
+            <p className="text-sm text-white/40 mt-0.5">{format(new Date(), 'MMMM yyyy')}</p>
           </div>
 
           <div className="mt-8 space-y-5">
             <RateRow emoji="🌿" label="Veg Diet" value={formatCurrency(settings?.vegDietRate || 0, settings?.currency)} />
-            <div className="h-px bg-slate-800" />
+            <div className="h-px bg-white/10" />
             <RateRow emoji="🍗" label="Non-Veg Diet" value={formatCurrency(settings?.nonVegDietRate || 0, settings?.currency)} />
-            <div className="h-px bg-slate-800" />
+            <div className="h-px bg-white/10" />
             <RateRow emoji="☕" label="Breakfast Only" value={formatCurrency(settings?.breakfastRate || 0, settings?.currency)} small />
           </div>
         </div>
@@ -176,10 +176,10 @@ function RateRow({ emoji, label, value, small }: { emoji: string; label: string;
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
         <span className="text-base">{emoji}</span>
-        <span className="text-sm text-slate-400">{label}</span>
+        <span className="text-sm text-white/60">{label}</span>
       </div>
       <span className={`font-display font-bold text-white ${small ? 'text-lg' : 'text-xl'}`}>
-        {value}<span className="text-xs font-normal text-slate-500 ml-0.5">/day</span>
+        {value}<span className="text-xs font-normal text-white/40 ml-0.5">/day</span>
       </span>
     </div>
   )
