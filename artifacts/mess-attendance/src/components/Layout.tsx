@@ -27,8 +27,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar (Desktop) */}
-      <aside className="hidden md:flex w-60 flex-col bg-white border-r border-slate-200 shrink-0">
-        <div className="h-16 flex items-center px-5 border-b border-slate-100">
+      <aside className="hidden md:flex w-60 flex-col bg-[hsl(var(--sidebar))] border-r border-stone-200 shrink-0">
+        <div className="h-16 flex items-center px-5 border-b border-stone-200">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm shadow-primary/30">
               <Utensils className="w-4 h-4 text-white" />
@@ -64,7 +64,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Mobile top bar */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white flex items-center justify-between px-4 z-40 border-b border-slate-200">
+      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-[hsl(var(--sidebar))] flex items-center justify-between px-4 z-40 border-b border-stone-200">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
             <Utensils className="w-3.5 h-3.5 text-white" />
@@ -80,7 +80,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-14 bg-white z-40 px-3 py-3">
+        <div className="md:hidden fixed inset-0 top-14 bg-[hsl(var(--sidebar))] z-40 px-3 py-3">
           <nav className="flex flex-col gap-0.5">
             {navItems.map((item) => {
               const isActive = location === item.href
