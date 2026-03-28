@@ -1,17 +1,15 @@
-import React, { useState, useRef, useCallback } from "react"
+import React, { useState } from "react"
 import { motion } from "framer-motion"
 import { 
   useGetBillingSummary,
   useToggleUnpaidBill,
 } from "@workspace/api-client-react"
 import { useQueryClient } from "@tanstack/react-query"
-import { Calculator, Printer, AlertCircle, CheckCircle2, Lock, Leaf, Drumstick } from "lucide-react"
+import { Calculator, Printer, AlertCircle, CheckCircle2, Leaf, Drumstick } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { formatCurrency } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/contexts/AuthContext"
-import { PinLoginModal } from "@/components/PinLoginModal"
 import { cn } from "@/lib/utils"
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
@@ -21,9 +19,6 @@ export default function Billing() {
   const [month, setMonth] = useState(currentDate.getMonth() + 1)
   const [year, setYear] = useState(currentDate.getFullYear())
   const { toast } = useToast()
-  const { isAdmin } = useAuth()
-  const [showLoginModal, setShowLoginModal] = useState(false)
-  const pendingAction = useRef<(() => void) | null>(null)
   const queryClient = useQueryClient()
 
   const { data: summary, isLoading } = useGetBillingSummary({ month, year })
@@ -37,26 +32,8 @@ export default function Billing() {
     }
   })
 
-  const requireAdmin = useCallback((fn: () => void) => {
-    if (!isAdmin) {
-      pendingAction.current = fn
-      setShowLoginModal(true)
-      return
-    }
-    fn()
-  }, [isAdmin])
-
-  const handleLoginSuccess = () => {
-    setShowLoginModal(false)
-    const action = pendingAction.current
-    pendingAction.current = null
-    if (action) action()
-  }
-
   const handleToggleUnpaid = (residentId: number, currentStatus: boolean) => {
-    requireAdmin(() => {
-      toggleUnpaidMut.mutate({ id: residentId, data: { hasUnpaidBill: !currentStatus } })
-    })
+    toggleUnpaidMut.mutate({ id: residentId, data: { hasUnpaidBill: !currentStatus } })
   }
 
   const handlePrint = () => {
@@ -259,11 +236,6 @@ export default function Billing() {
               <span className="font-bold text-lg text-rose-600">{unpaidCount}</span>
             </div>
           </div>
-          {!isAdmin && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1 pt-2 border-t">
-              <Lock className="w-3 h-3" /> Login as admin to toggle bill status
-            </p>
-          )}
         </Card>
       </div>
 
@@ -363,10 +335,6 @@ export default function Billing() {
           </table>
         </div>
       </Card>
-
-      {showLoginModal && (
-        <PinLoginModal onSuccess={handleLoginSuccess} onCancel={() => { pendingAction.current = null; setShowLoginModal(false) }} />
-      )}
     </motion.div>
   )
 }

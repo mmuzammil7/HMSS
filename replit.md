@@ -24,8 +24,7 @@ Hostel Mess Attendance & Billing Management System — pnpm workspace monorepo u
 - **Attendance Page**: Mark daily attendance for all residents — Present, P/2 (half day), Absent, Breakfast Only. Atomic upsert (ON CONFLICT DO UPDATE) prevents race conditions.
 - **Residents Page**: Add/edit/delete residents with room number, diet type (veg/non-veg), and unpaid bill flag
 - **Billing Page**: Monthly bill calculation per resident. Veg and non-veg residents billed at separate rates. Toggle unpaid bill status per resident. Print as PDF (opens print dialog).
-- **Settings Page**: Configure mess name, separate veg/non-veg diet rates, breakfast rate, currency, and admin PIN
-- **Admin PIN**: All destructive actions (add/edit/delete residents, billing changes, settings updates) require PIN. PIN stored as SHA256 hash server-side.
+- **Settings Page**: Configure mess name, separate veg/non-veg diet rates, breakfast rate, and currency
 
 ## Structure
 
