@@ -2,19 +2,33 @@ import React, { useState } from "react"
 import { motion } from "framer-motion"
 import { format } from "date-fns"
 import { useQueryClient } from "@tanstack/react-query"
-import { 
-  useGetAttendance, 
-  useGetResidents, 
-  useMarkAttendance, 
+import {
+  useGetAttendance,
+  useGetResidents,
+  useMarkAttendance,
   useBulkMarkAttendance,
-  AttendanceRecordStatus 
+  AttendanceRecordStatus
 } from "@workspace/api-client-react"
-import { Calendar as CalendarIcon, Save } from "lucide-react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { ChevronLeft, ChevronRight, Check, Users } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
+
+const STATUS_CONFIG = {
+  present:   { label: "Present",   short: "P",  activeBg: "bg-emerald-500 text-white border-emerald-500", dotColor: "bg-emerald-400" },
+  half:      { label: "Half",      short: "½",  activeBg: "bg-amber-400 text-white border-amber-400",     dotColor: "bg-amber-400" },
+  breakfast: { label: "Breakfast", short: "B",  activeBg: "bg-sky-400 text-white border-sky-400",         dotColor: "bg-sky-400" },
+  absent:    { label: "Absent",    short: "A",  activeBg: "bg-rose-500 text-white border-rose-500",       dotColor: "bg-rose-400" },
+} as const
+
+function getInitials(name: string) {
+  return name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)
+}
+
+function stepDate(current: string, delta: number): string {
+  const d = new Date(current)
+  d.setDate(d.getDate() + delta)
+  return format(d, 'yyyy-MM-dd')
+}
 
 export default function Attendance() {
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'))
@@ -23,11 +37,11 @@ export default function Attendance() {
 
   const { data: residents = [], isLoading: loadingRes } = useGetResidents()
   const { data: attendance = [], isLoading: loadingAtt } = useGetAttendance({ date })
-  
+
   const markMutation = useMarkAttendance({
     mutation: {
       onSuccess: () => queryClient.invalidateQueries({ queryKey: ['/api/attendance'] }),
-      onError: () => toast({ title: "Error marking attendance", variant: "destructive" })
+      onError: () => toast({ title: "Failed to save attendance", variant: "destructive" })
     }
   })
 
@@ -35,8 +49,9 @@ export default function Attendance() {
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['/api/attendance'] })
-        toast({ title: "Bulk attendance saved!" })
-      }
+        toast({ title: "All marked successfully" })
+      },
+      onError: () => toast({ title: "Bulk action failed", variant: "destructive" })
     }
   })
 
@@ -50,105 +65,130 @@ export default function Attendance() {
   }
 
   const activeResidents = residents.filter(r => r.isActive)
+  const markedCount = attendance.length
+  const isToday = date === format(new Date(), 'yyyy-MM-dd')
+  const displayDate = isToday ? "Today" : format(new Date(date + "T00:00:00"), 'd MMM yyyy')
 
-  if (loadingRes || loadingAtt) return <div className="p-8 text-center animate-pulse">Loading attendance data...</div>
+  const isLoading = loadingRes || loadingAtt
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">Attendance</h1>
-          <p className="text-muted-foreground mt-1">Mark daily attendance for {activeResidents.length} active residents.</p>
+          <h1 className="text-2xl font-display font-bold text-slate-900">Attendance</h1>
+          <p className="text-sm text-slate-400 mt-0.5">
+            {isLoading ? "Loading…" : `${markedCount} of ${activeResidents.length} marked`}
+          </p>
         </div>
-        
-        <div className="flex items-center gap-4 bg-card p-2 rounded-2xl shadow-sm border">
-          <div className="flex items-center gap-2 pl-2">
-            <CalendarIcon className="w-5 h-5 text-muted-foreground" />
-            <Input 
-              type="date" 
-              value={date} 
+
+        {/* Date navigator */}
+        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1 self-start sm:self-auto">
+          <button
+            onClick={() => setDate(d => stepDate(d, -1))}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <div className="flex items-center gap-2 px-2">
+            <input
+              type="date"
+              value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="border-0 shadow-none ring-0 focus-visible:ring-0 w-auto bg-transparent"
+              className="absolute opacity-0 w-0 h-0"
+              id="date-input"
             />
+            <label htmlFor="date-input" className="text-sm font-semibold text-slate-800 cursor-pointer min-w-[90px] text-center">
+              {displayDate}
+            </label>
           </div>
+          <button
+            onClick={() => setDate(d => stepDate(d, 1))}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
-      <Card className="overflow-hidden">
-        <div className="p-4 bg-slate-50 border-b flex flex-wrap gap-2 justify-between items-center">
-          <span className="text-sm font-medium text-slate-600">Bulk Actions:</span>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => handleBulkMark('present')} disabled={bulkMutation.isPending}>
-              Mark All Present
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => handleBulkMark('half')} disabled={bulkMutation.isPending}>
-              Mark All P/2
-            </Button>
-          </div>
+      {/* Bulk actions */}
+      {activeResidents.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-slate-400 font-medium mr-1">Mark all:</span>
+          {(Object.keys(STATUS_CONFIG) as AttendanceRecordStatus[]).map(s => (
+            <button
+              key={s}
+              onClick={() => handleBulkMark(s)}
+              disabled={bulkMutation.isPending}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-all disabled:opacity-50"
+            >
+              {STATUS_CONFIG[s].label}
+            </button>
+          ))}
         </div>
-        
-        <div className="divide-y divide-slate-100">
-          {activeResidents.map(resident => {
+      )}
+
+      {/* Resident list */}
+      {isLoading ? (
+        <div className="flex h-48 items-center justify-center">
+          <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        </div>
+      ) : activeResidents.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+          <Users className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+          <p className="text-slate-400 text-sm">No active residents. Add some in the Residents tab.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {activeResidents.map((resident, i) => {
             const record = attendance.find(a => a.residentId === resident.id)
-            const status = record?.status
-            
+            const status = record?.status as AttendanceRecordStatus | undefined
+
             return (
-              <div key={resident.id} className="p-4 md:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors">
-                <div>
-                  <p className="font-semibold text-foreground">{resident.name}</p>
-                  <p className="text-sm text-muted-foreground">Room: {resident.roomNumber}</p>
+              <motion.div
+                key={resident.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
+                className="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              >
+                {/* Resident info */}
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors",
+                    status ? STATUS_CONFIG[status].activeBg : "bg-slate-100 text-slate-400"
+                  )}>
+                    {status ? <Check className="w-4 h-4" /> : getInitials(resident.name)}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-900 text-sm leading-tight">{resident.name}</p>
+                    <p className="text-xs text-slate-400">Room {resident.roomNumber}</p>
+                  </div>
                 </div>
-                
-                <div className="flex bg-slate-100/50 p-1 rounded-xl w-full sm:w-auto">
-                  <StatusButton 
-                    label="Present" 
-                    active={status === 'present'} 
-                    colorClass="bg-emerald-100 text-emerald-800 shadow-sm border border-emerald-200"
-                    onClick={() => handleMark(resident.id, 'present')}
-                  />
-                  <StatusButton 
-                    label="P/2" 
-                    active={status === 'half'} 
-                    colorClass="bg-amber-100 text-amber-800 shadow-sm border border-amber-200"
-                    onClick={() => handleMark(resident.id, 'half')}
-                  />
-                  <StatusButton 
-                    label="Brkfst" 
-                    active={status === 'breakfast'} 
-                    colorClass="bg-sky-100 text-sky-800 shadow-sm border border-sky-200"
-                    onClick={() => handleMark(resident.id, 'breakfast')}
-                  />
-                  <StatusButton 
-                    label="Absent" 
-                    active={status === 'absent'} 
-                    colorClass="bg-rose-100 text-rose-800 shadow-sm border border-rose-200"
-                    onClick={() => handleMark(resident.id, 'absent')}
-                  />
+
+                {/* Status selector */}
+                <div className="flex items-center gap-1 bg-slate-50 rounded-xl p-1 w-full sm:w-auto">
+                  {(Object.entries(STATUS_CONFIG) as [AttendanceRecordStatus, typeof STATUS_CONFIG[keyof typeof STATUS_CONFIG]][]).map(([key, cfg]) => (
+                    <button
+                      key={key}
+                      onClick={() => handleMark(resident.id, key)}
+                      disabled={markMutation.isPending}
+                      className={cn(
+                        "flex-1 sm:flex-none sm:w-24 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 border",
+                        status === key
+                          ? cfg.activeBg + " shadow-sm"
+                          : "border-transparent text-slate-400 hover:text-slate-700 hover:bg-white hover:border-slate-200"
+                      )}
+                    >
+                      {cfg.label}
+                    </button>
+                  ))}
                 </div>
-              </div>
+              </motion.div>
             )
           })}
-          {activeResidents.length === 0 && (
-            <div className="p-12 text-center text-muted-foreground">
-              No active residents found. Add them in the Residents tab.
-            </div>
-          )}
         </div>
-      </Card>
-    </motion.div>
-  )
-}
-
-function StatusButton({ label, active, colorClass, onClick }: { label: string, active: boolean, colorClass: string, onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "flex-1 sm:flex-none px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
-        active ? colorClass : "text-slate-500 hover:bg-slate-200/50 border border-transparent"
       )}
-    >
-      {label}
-    </button>
+    </motion.div>
   )
 }
