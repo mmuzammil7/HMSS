@@ -114,20 +114,20 @@ export default function Dashboard() {
         </div>
 
         {/* Rates card */}
-        <div className="bg-primary rounded-2xl p-6 flex flex-col justify-between">
+        <div className="bg-[hsl(162,38%,11%)] rounded-2xl p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4 text-white/50" />
-              <p className="text-xs font-semibold text-white/60 uppercase tracking-wider">Current Rates</p>
+              <TrendingUp className="w-4 h-4 text-white/40" />
+              <p className="text-xs font-semibold text-white/50 uppercase tracking-wider">Current Rates</p>
             </div>
-            <p className="text-sm text-white/40 mt-0.5">{format(new Date(), 'MMMM yyyy')}</p>
+            <p className="text-sm text-white/30 mt-0.5">{format(new Date(), 'MMMM yyyy')}</p>
           </div>
 
           <div className="mt-8 space-y-5">
             <RateRow emoji="🌿" label="Veg Diet" value={formatCurrency(settings?.vegDietRate || 0, settings?.currency)} />
-            <div className="h-px bg-white/10" />
+            <div className="h-px bg-white/8" />
             <RateRow emoji="🍗" label="Non-Veg Diet" value={formatCurrency(settings?.nonVegDietRate || 0, settings?.currency)} />
-            <div className="h-px bg-white/10" />
+            <div className="h-px bg-white/8" />
             <RateRow emoji="☕" label="Breakfast Only" value={formatCurrency(settings?.breakfastRate || 0, settings?.currency)} small />
           </div>
         </div>
