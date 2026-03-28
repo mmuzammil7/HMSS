@@ -47,10 +47,6 @@ export default function Dashboard() {
             {settings?.messName || 'Hostel Mess'}
           </h1>
         </div>
-        <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 bg-white border border-slate-200 px-3 py-1.5 rounded-full">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
-          Live
-        </div>
       </div>
 
       {/* Stat cards */}
