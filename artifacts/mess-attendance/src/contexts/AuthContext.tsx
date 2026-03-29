@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await res.json()
     localStorage.setItem(TOKEN_KEY, data.token)
     setAuthTokenGetter(() => localStorage.getItem(TOKEN_KEY))
-    setUser({ id: 0, username: data.username, role: data.role })
+    setUser({ id: data.id ?? 0, username: data.username, role: data.role })
   }, [])
 
   const isAdmin = user?.role === "admin"

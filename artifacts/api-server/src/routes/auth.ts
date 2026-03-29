@@ -34,7 +34,7 @@ router.post("/auth/login", async (req, res) => {
         return;
       }
       const token = signToken({ id: 0, username, role: "resident" });
-      res.json({ token, role: "resident", username });
+      res.json({ token, role: "resident", username, id: 0 });
       return;
     }
 
@@ -61,7 +61,7 @@ router.post("/auth/login", async (req, res) => {
     }
 
     const token = signToken({ id: user.id, username: user.username, role: user.role as "admin" | "manager" });
-    res.json({ token, role: user.role, username: user.username });
+    res.json({ token, role: user.role, username: user.username, id: user.id });
   } catch (err) {
     res.status(500).json({ error: "Login failed" });
   }

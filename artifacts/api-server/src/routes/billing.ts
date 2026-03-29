@@ -39,7 +39,8 @@ router.get("/billing/summary", async (req, res) => {
       const halfDays = residentAttendance.filter((a) => a.status === "half").length;
       const breakfastDays = residentAttendance.filter((a) => a.status === "breakfast").length;
       const absentDays = residentAttendance.filter((a) => a.status === "absent").length;
-      const totalDays = presentDays + halfDays * 0.5 + breakfastDays * (breakfastRate / dietRate);
+      const breakfastDayEquiv = dietRate > 0 ? breakfastDays * (breakfastRate / dietRate) : 0;
+      const totalDays = presentDays + halfDays * 0.5 + breakfastDayEquiv;
       const totalAmount = Math.round(totalDays * dietRate * 100) / 100;
 
       return {
