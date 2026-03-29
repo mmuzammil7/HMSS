@@ -63,7 +63,8 @@ router.post("/auth/login", async (req, res) => {
     const token = signToken({ id: user.id, username: user.username, role: user.role as "admin" | "manager" });
     res.json({ token, role: user.role, username: user.username, id: user.id });
   } catch (err) {
-    res.status(500).json({ error: "Login failed" });
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: "Login failed", detail });
   }
 });
 
