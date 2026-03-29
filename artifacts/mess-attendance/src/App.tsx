@@ -1,15 +1,17 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { Layout } from "@/components/Layout";
-// Pages
-import Dashboard from "@/pages/Dashboard";
-import Attendance from "@/pages/Attendance";
-import Residents from "@/pages/Residents";
-import Billing from "@/pages/Billing";
-import Settings from "@/pages/Settings";
-import NotFound from "@/pages/not-found";
+import { Switch, Route, Router as WouterRouter } from "wouter"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { Toaster } from "@/components/ui/toaster"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { Layout } from "@/components/Layout"
+import { AuthProvider, useAuth } from "@/contexts/AuthContext"
+import Dashboard from "@/pages/Dashboard"
+import Attendance from "@/pages/Attendance"
+import Residents from "@/pages/Residents"
+import Billing from "@/pages/Billing"
+import Settings from "@/pages/Settings"
+import Login from "@/pages/Login"
+import ResidentView from "@/pages/ResidentView"
+import NotFound from "@/pages/not-found"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,9 +20,25 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
     },
   },
-});
+})
 
-function Router() {
+function AppContent() {
+  const { user, isLoading, isResident } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <p className="text-sm text-slate-400">Loading…</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) return <Login />
+  if (isResident) return <ResidentView />
+
   return (
     <Layout>
       <Switch>
@@ -32,20 +50,22 @@ function Router() {
         <Route component={NotFound} />
       </Switch>
     </Layout>
-  );
+  )
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <AppContent />
+          </WouterRouter>
+          <Toaster />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
-  );
+  )
 }
 
-export default App;
+export default App

@@ -1,5 +1,6 @@
 import { pool } from "@workspace/db";
-import { logger } from "./lib/logger";
+import { logger } from "./lib/logger.js";
+import bcrypt from "bcryptjs";
 
 export async function runMigrations(): Promise<void> {
   const client = await pool.connect();
@@ -33,6 +34,12 @@ export async function runMigrations(): Promise<void> {
     `);
 
     await client.query(`
+      ALTER TABLE mess_settings
+        ADD COLUMN IF NOT EXISTS resident_username TEXT NOT NULL DEFAULT 'resident',
+        ADD COLUMN IF NOT EXISTS resident_pin TEXT NOT NULL DEFAULT '123456'
+    `);
+
+    await client.query(`
       INSERT INTO mess_settings (id)
       VALUES (1)
       ON CONFLICT (id) DO NOTHING
@@ -52,6 +59,30 @@ export async function runMigrations(): Promise<void> {
       CREATE UNIQUE INDEX IF NOT EXISTS attendance_resident_date_unique
       ON attendance(resident_id, date)
     `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'manager'
+          CHECK (role IN ('admin', 'manager')),
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    const adminExists = await client.query(
+      `SELECT 1 FROM users WHERE role = 'admin' LIMIT 1`
+    );
+    if (adminExists.rowCount === 0) {
+      const passwordHash = await bcrypt.hash("admin123", 10);
+      await client.query(
+        `INSERT INTO users (username, password_hash, role) VALUES ($1, $2, 'admin')
+         ON CONFLICT (username) DO NOTHING`,
+        ["admin", passwordHash]
+      );
+      logger.info("Default admin user created (username: admin, password: admin123)");
+    }
 
     logger.info("Migrations complete.");
   } catch (err) {

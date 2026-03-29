@@ -17,14 +17,30 @@ Hostel Mess Attendance & Billing Management System — pnpm workspace monorepo u
 - **Build**: esbuild (CJS bundle)
 - **Frontend**: React + Vite, TanStack React Query, Tailwind CSS, shadcn/ui, Recharts, Framer Motion
 
+## Authentication
+
+Role-based JWT auth with 30-day tokens stored in `localStorage` under `messmate_token`.
+
+| Role | Default Login | Access |
+|------|--------------|--------|
+| Admin | `admin` / `admin123` | Full access — all pages, user management, settings |
+| Manager | Set in Settings → Managers | Attendance, Residents, Billing, Rates (no user management) |
+| Resident | `resident` / `123456` (PIN) | Read-only attendance view — separate layout |
+
+- **Admin** can create/edit/delete managers (Settings → Managers section)
+- **Admin** can change the shared resident username + PIN (Settings → Resident Login)
+- **Admin** can change their own password (Settings → Change Admin Password)
+- **Resident view** is a mobile-friendly single-screen with date navigator showing daily attendance
+
 ## Application Features
 
 ### Hostel Mess Manager (`artifacts/mess-attendance`)
+- **Login Page**: Role selector (Admin / Manager / Resident) with animated form. JWT auth, token persisted in localStorage.
 - **Dashboard**: Live overview — active residents, today's attendance stats, veg/non-veg billing rates
 - **Attendance Page**: Mark daily attendance for all residents — Present, P/2 (half day), Absent, Breakfast Only. Atomic upsert (ON CONFLICT DO UPDATE) prevents race conditions.
 - **Residents Page**: Add/edit/delete residents with room number, diet type (veg/non-veg), and unpaid bill flag
 - **Billing Page**: Monthly bill calculation per resident. Veg and non-veg residents billed at separate rates. Toggle unpaid bill status per resident. Print as PDF (opens print dialog).
-- **Settings Page**: Configure mess name, separate veg/non-veg diet rates, breakfast rate, and currency
+- **Settings Page**: Configure mess name, separate veg/non-veg diet rates, breakfast rate, and currency. Admin-only sections for manager CRUD, resident login credentials, and admin password change.
 
 ## Structure
 
@@ -49,7 +65,8 @@ artifacts-monorepo/
 
 - `residents` — hostel residents (name, roomNumber, whatsappNumber, isActive)
 - `attendance` — daily attendance (residentId, date, status: present|half|absent|breakfast)
-- `mess_settings` — mess configuration (name, dietRatePerDay, breakfastRate, currency)
+- `mess_settings` — mess configuration (name, dietRatePerDay, breakfastRate, currency, residentUsername, residentPin)
+- `users` — admin/manager accounts (username, passwordHash, role)
 
 ## WhatsApp Setup
 
