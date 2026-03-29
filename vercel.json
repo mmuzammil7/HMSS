@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "installCommand": "pnpm install",
   "buildCommand": "pnpm --filter @workspace/mess-attendance run build",
   "outputDirectory": "artifacts/mess-attendance/dist/public",
   "framework": null,
@@ -7,6 +8,7 @@
     { "source": "/((?!api).*)", "destination": "/index.html" }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "BASE_PATH": "/"
   }
 }
