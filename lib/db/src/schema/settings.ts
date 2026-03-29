@@ -9,6 +9,8 @@ export const settingsTable = pgTable("mess_settings", {
   nonVegDietRate: real("non_veg_diet_rate").notNull().default(120),
   breakfastRate: real("breakfast_rate").notNull().default(30),
   currency: text("currency").notNull().default("₹"),
+  residentUsername: text("resident_username").notNull().default("resident"),
+  residentPin: text("resident_pin").notNull().default("123456"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
