@@ -20,6 +20,8 @@ function formatSettings(s: typeof settingsTable.$inferSelect) {
     nonVegDietRate: s.nonVegDietRate,
     breakfastRate: s.breakfastRate,
     currency: s.currency,
+    residentUsername: s.residentUsername,
+    residentPin: s.residentPin,
     updatedAt: s.updatedAt.toISOString(),
   };
 }

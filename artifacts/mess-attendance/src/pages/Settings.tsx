@@ -39,12 +39,13 @@ export default function Settings() {
 
   useEffect(() => {
     if (settings) {
-      setMessName(settings.messName)
-      setVegDietRate(settings.vegDietRate)
-      setNonVegDietRate(settings.nonVegDietRate)
-      setBreakfastRate(settings.breakfastRate)
-      setCurrency(settings.currency)
-      setResidentUsername((settings as any).residentUsername || "resident")
+      const s = settings as typeof settings & { residentUsername?: string; residentPin?: string }
+      setMessName(s.messName)
+      setVegDietRate(s.vegDietRate)
+      setNonVegDietRate(s.nonVegDietRate)
+      setBreakfastRate(s.breakfastRate)
+      setCurrency(s.currency)
+      setResidentUsername(s.residentUsername || "resident")
     }
   }, [settings])
 

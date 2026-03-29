@@ -25,7 +25,7 @@ function getInitials(name: string) {
 }
 
 function stepDate(current: string, delta: number): string {
-  const d = new Date(current)
+  const d = new Date(current + "T00:00:00")
   d.setDate(d.getDate() + delta)
   return format(d, 'yyyy-MM-dd')
 }
@@ -90,17 +90,16 @@ export default function Attendance() {
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <div className="flex items-center gap-2 px-2">
+          <div className="relative flex items-center gap-2 px-2">
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="absolute opacity-0 w-0 h-0"
-              id="date-input"
+              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
             />
-            <label htmlFor="date-input" className="text-sm font-semibold text-slate-800 cursor-pointer min-w-[90px] text-center">
+            <span className="text-sm font-semibold text-slate-800 pointer-events-none min-w-[90px] text-center">
               {displayDate}
-            </label>
+            </span>
           </div>
           <button
             onClick={() => setDate(d => stepDate(d, 1))}
