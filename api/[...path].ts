@@ -17,5 +17,5 @@ function ensureMigrated(): Promise<void> {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   await ensureMigrated()
-  app(req as any, res as any)
+  ;(app as unknown as (req: any, res: any) => void)(req, res)
 }
