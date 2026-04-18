@@ -4,9 +4,6 @@ A web-based management system for hostel administrators to track resident attend
 
 ---
 
-## 🚀 Live Demo
-
-🔗 [replit.com/@muzammillodhi17/HMSS](https://replit.com/@muzammillodhi17/HMSS)
 
 ---
 
