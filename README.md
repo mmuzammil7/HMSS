@@ -4,9 +4,6 @@ A web-based management system for hostel administrators to track resident attend
 
 ---
 
-
----
-
 ## ✨ Features
 
 - **Attendance Tracking** — Mark and manage daily attendance for hostel residents
